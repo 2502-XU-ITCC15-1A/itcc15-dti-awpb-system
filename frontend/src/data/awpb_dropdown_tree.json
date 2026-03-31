@@ -1,0 +1,607 @@
+{
+  "note": "Extracted from uploaded workbook 'Copy of RCU 10 - Template - AWPB 2027 - with BED.xlsx'. Columns A-F hierarchy is identical across RCU, BKD, LDN, and MIS OR sheets. Title of Activities (G) differs by unit and entry.",
+  "unitOptions": [
+    {
+      "value": "RCU",
+      "aliases": [
+        "RCU"
+      ]
+    },
+    {
+      "value": "BKD",
+      "aliases": [
+        "BKD",
+        "BKD",
+        "Bukidnon"
+      ]
+    },
+    {
+      "value": "LDN",
+      "aliases": [
+        "LDN",
+        "Lanao del Norte"
+      ]
+    },
+    {
+      "value": "MIS OR",
+      "aliases": [
+        "MIS OR",
+        "MOR",
+        "Misamis Oriental"
+      ]
+    }
+  ],
+  "hierarchy": {
+    "COMPONENT 1: DIRECT ASSISTANCE TO ENTERPRISE": {
+      "Sub component 1.1 Business Services": {
+        "1.1.1 Business Development Services": [
+          {
+            "no": 1,
+            "performanceIndicator": "Number of qualified BDS providers engaged for RAPID beneficiaries",
+            "subActivities": []
+          }
+        ],
+        "1.1.2 Profiling": [
+          {
+            "no": 2,
+            "performanceIndicator": "Number of Farmer HHs beneficiaries Profiled",
+            "subActivities": []
+          },
+          {
+            "no": 3,
+            "performanceIndicator": "Number of FOs profiled",
+            "subActivities": []
+          },
+          {
+            "no": 4,
+            "performanceIndicator": "Number of MSMEs profiled",
+            "subActivities": []
+          }
+        ],
+        "1.1.3 Capacity Building": [
+          {
+            "no": 5,
+            "performanceIndicator": "Number of capacity building activities conducted",
+            "subActivities": [
+              "1.1.3.a Productivity/ Techno Transfer-- # of Capability Building, Productivity quality standard and other techno transfer trainings conducted",
+              "1.1.3.b Productivity/ Techno Transfer-- # of Benchmarking, Learning Visit and study mission conducted",
+              "1.1.3.c Enterprise Development-- # of Entreprenuerial capability building and development trainings",
+              "1.1.3.d Enterprise Development-- # of Youth Enterpreneurship Dev't Initiatives",
+              "1.1.3.e Matching Grant for Value adding production and logistics-- # of technical support trainings conducted",
+              "1.1.3.f Matching Grant for SALT  (100% grant)-- # of SALT Training conducted",
+              "1.1.3.g Matching Grant for Crop Rehabilitation/ Rejuvenation-- # of trainings on crop rehab/ rejuvenation conducted",
+              "1.1.3.h Capability building of LGUs for -- # of capacity development activities",
+              "1.1.3.i Capability building of LGUs for -- # of orientation / workshop/ meetings capacity development activities on FMI Implementation Arrangements",
+              "1.1.3.j Institutional Development Training-- # Insti Devt Training conducted to FAs, Coops, MSMEs"
+            ]
+          },
+          {
+            "no": 6,
+            "performanceIndicator": "Number of participants",
+            "subActivities": [
+              "Total number of participants per activities"
+            ]
+          }
+        ],
+        "1.1.4 Product Development Assistance/ Consultancy Services": [
+          {
+            "no": 7,
+            "performanceIndicator": "Number of product development assistance provided",
+            "subActivities": [
+              "1.1.4.a Product Development -- # of product devt activities organized",
+              "1.1.4.b Product Development -- # of Brand Equity Dev't Workshop Conducted",
+              "1.1.4.c Technology Innovation-- # of Agricultural productions and value-adding innovation technologies/ solutions developed and introduced"
+            ]
+          },
+          {
+            "no": 8,
+            "performanceIndicator": "Number of products/systems (e.g. digital processes) developed /improved",
+            "subActivities": [
+              "1.1.4.c Technology Innovation-- # of Agricultural productions and value-adding innovation technologies/ solutions developed and introduced"
+            ]
+          },
+          {
+            "no": 9,
+            "performanceIndicator": "Number of firm level productivity and quality standards consultancy services provided",
+            "subActivities": [
+              "1.1.4.d Matching Grant for Value adding production and logistics-- # of Operating Manuals developed"
+            ]
+          }
+        ],
+        "1.1.5 Marketing Assistance": [
+          {
+            "no": 10,
+            "performanceIndicator": "Number of trade promotions activities organized/participated",
+            "subActivities": [
+              "1.1.5.a Market Devt and Promotion-- # of Regional trade fairs participated/ or Organized",
+              "1.1.5.b Market Devt and Promotion-- # of National Trade Fair Participated",
+              "1.1.5.c Market Devt and Promotion-- # of regional exhibitors participated",
+              "1.1.5.d Market Devt and Promotion-- # of International Trade Fair Participated",
+              "1.1.5.e Market Devt and Promotion-- # Other Marketing Development Initiative conducted",
+              "1.1.5.f Product Development -- # of entry to National /International Award and Competition",
+              "1.1.5.g Market Referral and Matching-- # of Market brokering session/ Forum conducted (Nat'l)",
+              "1.1.5.h Market Referral and Matching-- # of Market brokering session conducted (Reg'l)"
+            ]
+          },
+          {
+            "no": 11,
+            "performanceIndicator": "Number of MSMEs/FOs/farmers assisted",
+            "subActivities": []
+          },
+          {
+            "no": 12,
+            "performanceIndicator": "Number of firms/MSMEs/FOs that have received quality and trade-related certifications",
+            "subActivities": [
+              "1.1.5.i Product Quality and Standards Compliance-- # of firm level consultancy services provided"
+            ]
+          },
+          {
+            "no": 13,
+            "performanceIndicator": "Number of products certified",
+            "subActivities": []
+          }
+        ]
+      },
+      "Sub component 1.2 Enterprise Strengthening": {
+        "1.2.1 Investment Plan Preparation": [
+          {
+            "no": 14,
+            "performanceIndicator": "Number of approved DIPs",
+            "subActivities": [
+              "1.2.1.a  Preparation of Regional Strategic Investment Plan-- # of Provincial workshops/ FGDs conducted",
+              "1.2.1.b  Preparation of Regional Strategic Investment Plan-- # of Regional workshops/ FGDs conducted",
+              "1.2.1.c  Preparation of Regional Strategic Investment Plan-- # of RTWG Meetings conducted",
+              "1.2.1.d  Preparation of Regional Strategic Investment Plan-- # of RSIPs prepared/ approved",
+              "1.2.1.e Preparation of Business Plans-- # of firm level consultations conducted",
+              "1.2.1.f Preparation of Business Plans-- # Technical Committee Meetings conducted",
+              "1.2.1.g Preparation of Business Plans-- # of RTWG Meetings conducted",
+              "1.2.1.h. Preparation of Business Plans-- # Business Plan prepared"
+            ]
+          }
+        ],
+        "1.2.2 Productive Investments Facilitation": [
+          {
+            "no": 15,
+            "performanceIndicator": "Number of MGRRs approved",
+            "subActivities": []
+          },
+          {
+            "no": 16,
+            "performanceIndicator": "Number of MG funds (MGRRs) support received by FOs and MSMEs",
+            "subActivities": [
+              "1.2.2.a Matching Grant for Value adding production and logistics-- # of matching grant proposals approved"
+            ]
+          },
+          {
+            "no": 17,
+            "performanceIndicator": "Number of Smallholder Farmers received the MG inputs/tools",
+            "subActivities": []
+          },
+          {
+            "no": 18,
+            "performanceIndicator": "Number of FOs/MSMEs received MG assistance",
+            "subActivities": []
+          },
+          {
+            "no": 19,
+            "performanceIndicator": "Number of farms rehabilitated (In Number of  hectares)",
+            "subActivities": [
+              "1.2.2.b Matching Grant for Crop Rehabilitation/ Rejuvenation-- # Small Rehabilitation Tools"
+            ]
+          },
+          {
+            "no": 20,
+            "performanceIndicator": "Number of expansion areas (in Number of hectares)",
+            "subActivities": [
+              "1.2.2.c Matching Grant for SALT  (100% grant)-- # hectares planted  for SALT (planting material)"
+            ]
+          }
+        ]
+      },
+      "Sub component 1.3 Farm To Market Infrastructure": {
+        "1.3.1 Technical Support": [
+          {
+            "no": 21,
+            "performanceIndicator": "length of road rehabilitated/ covered (in km)",
+            "subActivities": [
+              "1.3.1.a Farm to market infrastructure-- length of road rehabilitated (in km)"
+            ]
+          }
+        ],
+        "1.4 Other Operating Cost Attributed to Component 1": [
+          {
+            "no": 22,
+            "performanceIndicator": "N/A",
+            "subActivities": [
+              "1.4.a Technology Innovation-- Provision for Other Professional Services (Innovation Coordinator, Innovation Analyst, PA and RITA)",
+              "1.4.b Enterprise Development-- # of Pre-Condition/ FPIC (For IPs) Secured",
+              "1.4.c Technical Support-- # of travel days (at least 5 travel days/ mo)",
+              "1.4.d Value Chain Stakeholder's Profiling-- # Enumerators hired for profiling",
+              "1.4.d Value Chain Stakeholder's Profiling-- # of Field Validators  hired for profiling",
+              "1.4.e Technical Support-- PCO Value Chain Officer",
+              "1.4.f Technical Support-- PCO Business Service Officer",
+              "1.4.g Technical Support-- PCO Business Development Assistant",
+              "1.4.h Technical Support-- Rural Infrastructure Officer",
+              "1.4.i Technical Support-- Finance Service Officer",
+              "1.4.j Technical Support-- Finance Service Assistant",
+              "1.4.k Technical Support-- GESI Specialist",
+              "1.4.l Technical Support-- Information Analyst",
+              "1.4.m Technical Support-- NPCO Information System Assistant",
+              "1.4.n Technical Support-- Marketing Coordinators",
+              "1.4.o Technical Support-- Provincial Coordinators",
+              "1.4.p Technical Support-- Value chain Facilitators",
+              "1.4.q Technical Support-- Admin Assistant",
+              "1.4.r Technical Support-- Traveling Allowance",
+              "1.4.s Project Management Unit setup-- # of PMU technical staff hired (2-Engineer III, 1- ISA III, 1-DMO III,  1-DMO II)",
+              "1.4.t Project Management Unit setup-- # of RAPID Project Management Unit Cap Dev Staff hired (12 months)",
+              "1.4.u Project Management Unit setup-- # of Regional Rural Infrastructure Engineer (Engr. III) hired (@1 RIE per Region)",
+              "1.4.v Project Management Unit setup-- # of Capacity Development/ Trainings for LGUs conducted",
+              "1.4.w Project Management Unit setup-- Provision for ICT Equipment",
+              "1.4.x Project Management Unit setup-- Supplies and other operating expense",
+              "1.4.y Project Management Unit setup-- Number of LGU projects monitored and validated (PMU and Regional)",
+              "1.4.z Project Management Unit setup-- # of project status reports (physical & financial) submitted to the NPCO",
+              "1.4.aa Project Management Unit setup-- # of regular meetings or conferences conducted/ attended/ facilitated/ participated",
+              "1.4.bb Project Management Unit setup-- # of year-end-review (for CY 2021) meetings with DILG Regional Offices conducted",
+              "1.4.cc Technical Support-- # of travel days"
+            ]
+          }
+        ]
+      }
+    },
+    "COMPONENT 2: INSTITUTIONAL STRENGTHENING": {
+      "Sub component 2.1 Value Chain Governance": {
+        "2.1.1 Partnership Agreements": [
+          {
+            "no": 23,
+            "performanceIndicator": "Number of commercial partnership agreements supported by DIPs",
+            "subActivities": [
+              "2.1.1.a Building Business Linkages-- # of commercial partnership agreements signed"
+            ]
+          }
+        ],
+        "2.1.2 Industry Studies": [
+          {
+            "no": 24,
+            "performanceIndicator": "Number of Industry Studies Prepared",
+            "subActivities": [
+              "2.1.2.a Value Chain Management-- # of Value Chain Management Manual developed/ printed"
+            ]
+          }
+        ],
+        "2.1.3 Industry Council & Stakeholders  Engagement/Partnerships (MOAs)": [
+          {
+            "no": 25,
+            "performanceIndicator": "Number of RAPID assisted/ participated/ sponsored industry-organized congress/ conferences, events and meetings",
+            "subActivities": [
+              "2.1.3.a Industry and Value Chain Promotion-- # regional industry conferences",
+              "2.1.3.b Industry and Value Chain Promotion-- # of international conference participated",
+              "2.1.3.c Value Chain Management-- # of Regional VC/ Sectoral Strategic planning sessions",
+              "2.1.3.d Value Chain Management-- # of National Industry Conferences/ VC Governance Forum organized",
+              "2.1.3.e Value Chain Management-- # Industry Assessment / Strategic Planning Session Facilitated"
+            ]
+          },
+          {
+            "no": 26,
+            "performanceIndicator": "Number of resolutions/Policy Recoms passed by RTWGs",
+            "subActivities": [
+              "2.1.3.f Value Chain Management-- # of Regional  Industry Councils strengthened/ engaged"
+            ]
+          },
+          {
+            "no": 27,
+            "performanceIndicator": "Number of Capacity Building for VC Goverance",
+            "subActivities": []
+          }
+        ]
+      }
+    },
+    "COMPONENT 3: TECHNICAL ASSISTANCE TO FSPs": {
+      "": {
+        "3.1 Financing Campaigns and Promotions": [
+          {
+            "no": 28,
+            "performanceIndicator": "Number of MSMEs availed of Financial services and products",
+            "subActivities": []
+          },
+          {
+            "no": 29,
+            "performanceIndicator": "Number of FOs availed of Financial Services",
+            "subActivities": []
+          },
+          {
+            "no": 30,
+            "performanceIndicator": "Number of Farming Households availed of Financial Services",
+            "subActivities": []
+          },
+          {
+            "no": 31,
+            "performanceIndicator": "Number of FSPs extend innovative/suitable and other VC Financial Services",
+            "subActivities": []
+          },
+          {
+            "no": 32,
+            "performanceIndicator": "Number of Suitable FInancial Products Developed",
+            "subActivities": []
+          },
+          {
+            "no": 33,
+            "performanceIndicator": "Number of Info Campaigns/Orientation Conducted",
+            "subActivities": [
+              "3.1.a FSP networking-- # of Consultation Meetings with FSP",
+              "3.1.b FSP networking-- # of Regional Financing Forum / Planning Workshop",
+              "3.1.c Capacity Building for Credit Coops-- # Value Chain Financing (NPCO)",
+              "3.1.d Capacity Building for Credit Coops-- # of trainings for Credit Cooperative conducted",
+              "3.1.e Technical consultancy on financial access and risk mitigations -- # of policies research and studies facilitated"
+            ]
+          },
+          {
+            "no": 34,
+            "performanceIndicator": "Number of FOs linked to to financial services",
+            "subActivities": []
+          },
+          {
+            "no": 35,
+            "performanceIndicator": "Number of MSMEs linked to financial services",
+            "subActivities": []
+          }
+        ],
+        "3.3 Other Operating Cost Attributed to Component 3": [
+          {
+            "no": 36,
+            "performanceIndicator": "N/A",
+            "subActivities": [
+              "3.5 Technical Support-- # of travel days"
+            ]
+          }
+        ]
+      }
+    },
+    "COMPONENT 4: INNOVATIVE FINANCING": {
+      "": {
+        "4.1 Financing Campaigns and Promotions": [
+          {
+            "no": 37,
+            "performanceIndicator": "Number of Firms availed of Financing Services",
+            "subActivities": []
+          },
+          {
+            "no": 38,
+            "performanceIndicator": "Number of Info Campaigns/Orientation Conducted",
+            "subActivities": [
+              "4.1.a Training, Conduct of Awareness and promotional activities on innovative fund, Seminar and workshops on equity venuture capital and other innovative financing product -- # of training/study visit conducted",
+              "4.1.b Training, Conduct of Awareness and promotional activities on innovative fund, Seminar and workshops on equity venuture capital and other innovative financing product -- # of seminars/workshops conducted"
+            ]
+          }
+        ],
+        "4.3 Other Operating Cost Attributed to Component 4": [
+          {
+            "no": 39,
+            "performanceIndicator": "N/A",
+            "subActivities": [
+              "4.3.a Training, Conduct of Awareness and promotional activities on innovative fund, Seminar and workshops on equity venuture capital and other innovative financing product -- #  of SBC personnel hired",
+              "4.3.b Training, Conduct of Awareness and promotional activities on innovative fund, Seminar and workshops on equity venuture capital and other innovative financing product -- # of promo materials prepared",
+              "4.3.c Equity Venture Capital-- Amount of Loan Released"
+            ]
+          }
+        ]
+      }
+    },
+    "COMPONENT 5: PROJECT MANAGEMENT": {
+      "Sub component 5.1:  Establishmentof project management structures & systems": {
+        "5.1.1Staff support and Systems": [
+          {
+            "no": 40,
+            "performanceIndicator": "Number of Project Staff Hired",
+            "subActivities": []
+          },
+          {
+            "no": 41,
+            "performanceIndicator": "Number of plans, policies/guidelines, and manuals prepared/ updated",
+            "subActivities": [
+              "5.1.1 Technical consultancy on financial access and risk mitigations -- # of policies research and studies facilitated"
+            ]
+          }
+        ]
+      },
+      "Sub component 5.2:  Staff Training and Capacity Building": {
+        "5.2.1 Capacity-Building of Project Implementers": [
+          {
+            "no": 42,
+            "performanceIndicator": "Number of Capacity Building/enhancement initiatives provided for RAPID staff, DTI organic staff, and Negosyo Center Business Counselors",
+            "subActivities": [
+              "5.2.1.a Establish Networks of Negosyo Centers-- # Capacity Bldg/ Training Conducted",
+              "5.2.1.b Capacity building activities for Staff -- # of trainings conducted (National)",
+              "5.2.1.c Capacity building activities for Staff -- # of trainings conducted (Regional)",
+              "5.2.1.d Management Information System-- # of MIS training conducted",
+              "5.2.1.e Knowledge and Learning Management-- # of KM and Comm Plan Workshop conducted (NPCO)",
+              "5.2.1.f Knowledge and Learning Management-- # of KM and Comm Planning/ Training conducted (RCU)",
+              "5.2.1.g Knowledge and Learning Management-- # Capability building on KM"
+            ]
+          },
+          {
+            "no": 43,
+            "performanceIndicator": "Number of participants capacitated",
+            "subActivities": []
+          }
+        ]
+      },
+      "Sub component 5.3:  Project Coordination and Networking": {
+        "5.3.1 Project Coordination and Networking": [
+          {
+            "no": 44,
+            "performanceIndicator": "Number of Coordination meeting conducted",
+            "subActivities": [
+              "5.3.1.a Capability building of LGUs for -- FMI National Coordination Meeting/Technical Support",
+              "5.3.1.b Capability building of LGUs for -- # of FMI IFAD Implementation Support Mission Conducted (NPCO)",
+              "5.3.1.c Inter-Agency Coordination-- # of PSC Meetings conducted",
+              "5.3.1.d Inter-Agency Coordination-- # of RTWG Meetings conducted",
+              "5.3.1.e Project Implementation Coordination -- # of Support/ Coordination Meeting conducted",
+              "5.3.1.f DIP Implementation Planning -- # of Planning Meeting conducted",
+              "5.3.1.g Monitoring and Evaluation-- # of National Project  Planning and Assessment conducted",
+              "5.3.1.h Monitoring and Evaluation-- # Midterm review Conducted",
+              "5.3.1.i Support to IFAD related activities-- # of IFAD implementation support missions conducted"
+            ]
+          },
+          {
+            "no": 45,
+            "performanceIndicator": "Number of Program Networking Activities participated",
+            "subActivities": [
+              "5.3.1.j Knowledge and Learning Management-- # of KM Learning Exchange activities",
+              "5.3.1.k Support to IFAD related activities-- # of IFAD related events hosted and supported"
+            ]
+          }
+        ]
+      },
+      "Sub component 5.4: Results Based Project Monitoring and Evaluation": {
+        "5.4.1 Monitoring and Evaluation": [
+          {
+            "no": 46,
+            "performanceIndicator": "MIS established and updated",
+            "subActivities": [
+              "5.4.1.a Management Information System-- # of Development, Updating and Maintenance of MIS",
+              "5.4.1.b Management Information System-- # of Virtual Meeting, Webinar and Conference Platform  updated and maintained"
+            ]
+          },
+          {
+            "no": 47,
+            "performanceIndicator": "Number of M&E Activities initated/facilitated",
+            "subActivities": [
+              "5.4.1.c Monitoring and Evaluation-- # of M&E Consultation Workshop conducted",
+              "5.4.1.d Monitoring and Evaluation -- # of DIP implementation reviews conducted",
+              "5.4.1.e Monitoring and Evaluation-- # Annual Outcome Survey Conducted"
+            ]
+          },
+          {
+            "no": 48,
+            "performanceIndicator": "100% report submission**",
+            "subActivities": []
+          }
+        ],
+        "5.4.2 Communication and Knowledge Management": [
+          {
+            "no": 49,
+            "performanceIndicator": "Number of KM materials prepared, updated, and disseminated",
+            "subActivities": [
+              "5.4.2.a Knowledge and Learning Management -- # of Publication and IEC Materials",
+              "5.4.2.b Knowledge and Learning Management-- preparation of KM Products"
+            ]
+          }
+        ]
+      },
+      "Sub component 5.5: Gender Equality and Social Inclusion": {
+        "5.5.1 GESI": [
+          {
+            "no": 50,
+            "performanceIndicator": "Number of GESI activities/projects initiated/coordinated",
+            "subActivities": [
+              "5.5.1.a GESI Mainstreaming-- # of GESI strategy and action  plan rolled-out",
+              "5.5.1.b GESI Mainstreaming-- # of National workshop conducted on GESI",
+              "5.5.1.c GESI Mainstreaming-- # of Regional GESI Trainings/ workshop conducted",
+              "5.5.1.d GESI Mainstreaming-- # of GESI-Sensitive Value Chain Analysis for Prioritized Commodities"
+            ]
+          }
+        ]
+      },
+      "Sub component 5.6: Financial Performance": {
+        "5.6.1 Financial Performance Monitoring": [
+          {
+            "no": 51,
+            "performanceIndicator": "Number consolidated SOE Submitted",
+            "subActivities": []
+          },
+          {
+            "no": 52,
+            "performanceIndicator": "% Utilization rate (overall AWPB, for FMI and MG)",
+            "subActivities": []
+          },
+          {
+            "no": 53,
+            "performanceIndicator": "Number of Regional SOE Submitted",
+            "subActivities": []
+          }
+        ],
+        "5.7.1  Other Operating Cost Attributed to Component 5": [
+          {
+            "no": 54,
+            "performanceIndicator": "N/A",
+            "subActivities": [
+              "5.7.1.a National Project Coordination Office (NPCO)-- Project Manager",
+              "5.7.1.b National Project Coordination Office (NPCO)-- Procurement officer",
+              "5.7.1.c National Project Coordination Office (NPCO)-- Finance Management Officer",
+              "5.7.1.d National Project Coordination Office (NPCO)-- Planning/M&E Officer",
+              "5.7.1.e National Project Coordination Office (NPCO)-- Planning/M&E Specialist",
+              "5.7.1.f National Project Coordination Office (NPCO)-- Planning/M&E Assistant",
+              "5.7.1.g National Project Coordination Office (NPCO)-- Communication  & KM Specialist",
+              "5.7.1.h National Project Coordination Office (NPCO)-- Procurement  Assistant",
+              "5.7.1.i National Project Coordination Office (NPCO)-- Finance Assistant",
+              "5.7.1.j National Project Coordination Office (NPCO)-- Project Assistant",
+              "5.7.1.k National Project Coordination Office (NPCO)-- Admin Assistant",
+              "5.7.1.l National Project Coordination Office (NPCO)-- Finance Assistant (FS Based)",
+              "5.7.1.m National Project Coordination Office (NPCO)-- Project Assistant (RGMS Based)",
+              "5.7.1.n National Project Coordination Office (NPCO)-- Project Assistant (ROG Based)",
+              "5.7.1.o RGMS Computer Operator IV",
+              "5.7.1.p National Project Coordination Office (NPCO)-- Admin Aide (RGMS)",
+              "5.7.1.q National Project Coordination Office (NPCO)-- Driver (5-Davao and Manila)",
+              "5.7.1.r Regional Project Coordination Units  (RPCU)-- Regional Project Coordinators",
+              "5.7.1.s Regional Project Coordination Units  (RPCU)-- M&EKM Coordinator",
+              "5.7.1.t Regional Project Coordination Units  (RPCU)-- Finance  Management Assistants",
+              "5.7.1.u Regional Project Coordination Units  (RPCU)-- Procurement Assistant",
+              "5.7.1.v Regional Project Coordination Units  (RPCU)-- Drivers",
+              "5.7.1.w Provincial Project Coordianting Units (PPCU)-- Drivers",
+              "5.7.1.x National Project Coordination Office (NPCO) and RCU-- M&E Assistant",
+              "5.7.1.y Benefits (non tax)-- Accident Insurance",
+              "5.7.1.z Benefits (non tax)-- Health Insurance",
+              "5.7.1.aa DTI Central Office (Honorarium per month)-- Project Director",
+              "5.7.1.ab DTI Central Office (Honorarium per month)-- Director (RGMS and FS)",
+              "5.7.1.ac DTI Central Office (Honorarium per month)-- Division Chief (RGMS and FS)",
+              "5.7.1.ad DTI Central Office (Honorarium per month)-- Technical Support Staff (NPCO, and RGMS,)",
+              "5.7.1.ae Regional Office -- Regional Directors",
+              "5.7.1.af Regional Office -- Assistant RD",
+              "5.7.1.ag Regional Office -- Technical DC and FAD Chief",
+              "5.7.1.ah Regional Office -- Accountant",
+              "5.7.1.ai Regional Office -- Budget Officer",
+              "5.7.1.aj Regional Office -- Human Resource Management Officer",
+              "5.7.1.ak Regional Office -- BAC Member (5 including Chairperson)",
+              "5.7.1.al Regional Office -- BAC Secretariat (2)",
+              "5.7.1.am Regional Office -- Supply Officer",
+              "5.7.1.an Regional Office -- Cashier",
+              "5.7.1.ao Provincial Office -- Provincial Directors (Signatory)",
+              "5.7.1.ap Provincial Office -- Technical DCs",
+              "5.7.1.aq Provincial Office -- Administrative Officer",
+              "5.7.1.ar Provincial Office -- Acting Accountant",
+              "5.7.1.as Provincial Office -- Acting Budget Officer",
+              "5.7.1.at Technical Support-- # of travel days for monitoring conducted  (organic staff)",
+              "5.7.1.au Vehicle-- # of Vans or SUV",
+              "5.7.1.av Office Equipment-- ICT Equipment",
+              "5.7.1.aw Office Equipment-- Other Office Equipment (ex. Camera, Server, etc.)",
+              "5.7.1.ax1 Office Renovation-- Project Office Renovated",
+              "5.7.1.ax2 Office  Rental-- Project Office Rental",
+              "5.7.1.ay Office Utilities - electricity- (provision based on cost tabs)-- # of months (GoP counterpart)",
+              "5.7.1.ay1 Office Utilities - water(provision based on cost tabs)-- # of months (GoP counterpart)",
+              "5.7.1.az1 Other Supplies and Materials Cost",
+              "5.7.1.az2 Other Supplies and Materials Cost",
+              "5.7.1 bb Office Supplies - NPCO",
+              "5.7.1 bb Office Supplies - RCU",
+              "5.7.1.cc Fuel and Lubrication-- # of kms travelled",
+              "5.7.1.dd1 Publication-- # of months",
+              "5.7.1.dd2 Subscriptions-- # of months",
+              "5.7.1.ee Traveling Allowance-- Domestic Travel",
+              "5.7.1.ff Traveling Allowance-- Foreign Travel",
+              "5.7.1.gg Airline Ticket-- Domestic Travel",
+              "5.7.1.hh Airline Ticket-- Foreign Travel",
+              "5.7.1.ii1 Communication (Internet)-- NPCO",
+              "5.7.1.ii2 Communication (Mobile Phone, and Landline)-- NPCO",
+              "5.7.1.jj1 Communication (Internet)-- RCU and PCU",
+              "5.7.1.jj2 Communication (Mobile Phone, and Landline)-- RCU and PCU",
+              "5.7.1.kk Extraordinary-- # of months",
+              "5.7.1.ll Repair and Maintenance-- # of vehicle/ year",
+              "5.7.1.mm Repair and Maintenance-- office equipment/ year",
+              "5.7.1.nn Postage and deliveries-- # of months",
+              "5.7.1.oo Insurance and Bonds-- Comprehensive Insurance and Bonds (GoP counterpart)"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
