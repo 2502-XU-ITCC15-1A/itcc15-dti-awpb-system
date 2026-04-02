@@ -1,3 +1,6 @@
+import { useState } from "react"
+import EntryDetailsModal from "../components/entries/EntryDetailsModal"
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
@@ -33,6 +36,8 @@ function getStatusClasses(status) {
 }
 
 export default function MyEntries({ entries = [] }) {
+  const [selectedEntry, setSelectedEntry] = useState(null)
+
   return (
     <div className="space-y-6">
       <div>
@@ -56,6 +61,7 @@ export default function MyEntries({ entries = [] }) {
                 <th className="p-3">Submitted</th>
                 <th className="p-3">Status</th>
                 <th className="p-3 text-right">Total</th>
+                <th className="p-3 text-right">Action</th>
               </tr>
             </thead>
 
@@ -82,12 +88,26 @@ export default function MyEntries({ entries = [] }) {
                   <td className="p-3 text-right font-medium">
                     {formatCurrency(entry.grandTotal)}
                   </td>
+                  <td className="p-3 text-right">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedEntry(entry)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      View
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      <EntryDetailsModal
+        entry={selectedEntry}
+        onClose={() => setSelectedEntry(null)}
+      />
     </div>
   )
 }
