@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 function formatCurrency(value) {
   return new Intl.NumberFormat("en-PH", {
     style: "currency",
@@ -34,11 +36,42 @@ function getStatusClasses(status) {
   }
 }
 
-export default function EntryDetailsModal({ entry, onClose }) {
+export default function AdminEntryReviewModal({
+  entry,
+  onClose,
+  onApprove,
+  onReturn,
+  onReject,
+}) {
+  const [reviewNote, setReviewNote] = useState("")
+
+  useEffect(() => {
+    setReviewNote(entry?.adminComment || "")
+  }, [entry])
+
   if (!entry) return null
 
-  const activeMonthlyRows =
-    entry.monthlyBreakdown?.filter((row) => row.target > 0) || []
+  const handleReturn = () => {
+    if (!reviewNote.trim()) {
+      alert("Please enter a review note before returning the entry.")
+      return
+    }
+
+    onReturn(reviewNote.trim())
+  }
+
+  const handleReject = () => {
+    if (!reviewNote.trim()) {
+      alert("Please enter a review note before rejecting the entry.")
+      return
+    }
+
+    onReject(reviewNote.trim())
+  }
+
+  const handleApprove = () => {
+    onApprove(reviewNote.trim())
+  }
 
   return (
     <div
@@ -46,14 +79,14 @@ export default function EntryDetailsModal({ entry, onClose }) {
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-xl"
+        className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="sticky top-0 flex items-start justify-between border-b bg-white px-6 py-4">
           <div>
-            <h2 className="text-xl font-bold">Entry Details</h2>
+            <h2 className="text-xl font-bold">Review Submission</h2>
             <p className="text-sm text-gray-500">
-              Review the full submitted entry information.
+              Review the encoder&apos;s submitted AWPB entry.
             </p>
           </div>
 
@@ -84,16 +117,6 @@ export default function EntryDetailsModal({ entry, onClose }) {
             </span>
           </div>
 
-          {(entry.status === "Returned" || entry.status === "Rejected") &&
-            entry.adminComment && (
-              <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                <h4 className="mb-2 font-medium text-amber-900">
-                  Admin Comment
-                </h4>
-                <p className="text-sm text-amber-900">{entry.adminComment}</p>
-              </div>
-            )}
-
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-xl border bg-gray-50 p-4">
               <h4 className="mb-3 font-medium">Classification</h4>
@@ -115,12 +138,6 @@ export default function EntryDetailsModal({ entry, onClose }) {
 
               <div className="space-y-2 text-sm">
                 <p><span className="font-medium">Unit Cost:</span> {formatCurrency(entry.unitCost)}</p>
-                <p>
-                  <span className="font-medium">Active Months:</span>{" "}
-                  {activeMonthlyRows.length > 0
-                    ? activeMonthlyRows.map((row) => row.month).join(", ")
-                    : "None"}
-                </p>
                 <p><span className="font-medium">Grand Total:</span> {formatCurrency(entry.grandTotal)}</p>
               </div>
             </div>
@@ -175,6 +192,46 @@ export default function EntryDetailsModal({ entry, onClose }) {
             ) : (
               <p className="text-sm text-gray-500">No monthly breakdown found.</p>
             )}
+          </div>
+
+          <div className="rounded-xl border bg-white p-4">
+            <h4 className="mb-3 font-medium">Review Note</h4>
+            <textarea
+              rows="4"
+              value={reviewNote}
+              onChange={(e) => setReviewNote(e.target.value)}
+              placeholder="Enter comments or revision instructions"
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+            />
+            <p className="mt-2 text-xs text-gray-500">
+              Required when returning or rejecting. Optional when approving.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleReturn}
+              className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100"
+            >
+              Return for Revision
+            </button>
+
+            <button
+              type="button"
+              onClick={handleReject}
+              className="rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
+            >
+              Reject
+            </button>
+
+            <button
+              type="button"
+              onClick={handleApprove}
+              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Approve
+            </button>
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import EntryDetailsModal from "../components/entries/EntryDetailsModal"
 
 function formatCurrency(value) {
@@ -28,6 +29,8 @@ function getStatusClasses(status) {
       return "bg-yellow-100 text-yellow-700"
     case "Returned":
       return "bg-red-100 text-red-700"
+    case "Rejected":
+      return "bg-gray-200 text-gray-700"
     case "Approved":
       return "bg-green-100 text-green-700"
     default:
@@ -35,8 +38,15 @@ function getStatusClasses(status) {
   }
 }
 
-export default function MyEntries({ entries = [] }) {
+export default function MyEntries({ entries = [], onEditEntry }) {
   const [selectedEntry, setSelectedEntry] = useState(null)
+  const navigate = useNavigate()
+
+  const handleEdit = (entry) => {
+    onEditEntry(entry)
+    setSelectedEntry(null)
+    navigate("/submit")
+  }
 
   return (
     <div className="space-y-6">
@@ -89,13 +99,25 @@ export default function MyEntries({ entries = [] }) {
                     {formatCurrency(entry.grandTotal)}
                   </td>
                   <td className="p-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedEntry(entry)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      View
-                    </button>
+                    <div className="flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEntry(entry)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        View
+                      </button>
+
+                      {entry.status === "Returned" && (
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(entry)}
+                          className="text-amber-700 hover:underline"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}

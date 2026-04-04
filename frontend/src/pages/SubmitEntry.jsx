@@ -6,1078 +6,1132 @@ import awpbTree from "../data/awpb_dropdown_tree.json"
 const FALLBACK_VALUE = "N/A"
 
 const MONTHS = [
-    { key: "jan", label: "Jan" },
-    { key: "feb", label: "Feb" },
-    { key: "mar", label: "Mar" },
-    { key: "apr", label: "Apr" },
-    { key: "may", label: "May" },
-    { key: "jun", label: "Jun" },
-    { key: "jul", label: "Jul" },
-    { key: "aug", label: "Aug" },
-    { key: "sep", label: "Sep" },
-    { key: "oct", label: "Oct" },
-    { key: "nov", label: "Nov" },
-    { key: "dec", label: "Dec" },
+  { key: "jan", label: "Jan" },
+  { key: "feb", label: "Feb" },
+  { key: "mar", label: "Mar" },
+  { key: "apr", label: "Apr" },
+  { key: "may", label: "May" },
+  { key: "jun", label: "Jun" },
+  { key: "jul", label: "Jul" },
+  { key: "aug", label: "Aug" },
+  { key: "sep", label: "Sep" },
+  { key: "oct", label: "Oct" },
+  { key: "nov", label: "Nov" },
+  { key: "dec", label: "Dec" },
 ]
 
 const defaultFormValues = {
-    planningYear: "2026",
-    unit: "",
-    component: "",
-    useOtherShortcut: false,
-    subComponent: "",
-    keyActivity: "",
-    no: "",
-    performanceIndicator: "",
-    subActivity: "",
-    titleOfActivities: "",
-    unitCost: "",
-    targets: {
-        jan: "",
-        feb: "",
-        mar: "",
-        apr: "",
-        may: "",
-        jun: "",
-        jul: "",
-        aug: "",
-        sep: "",
-        oct: "",
-        nov: "",
-        dec: "",
-    },
+  planningYear: "2026",
+  unit: "",
+  component: "",
+  useOtherShortcut: false,
+  subComponent: "",
+  keyActivity: "",
+  no: "",
+  performanceIndicator: "",
+  subActivity: "",
+  titleOfActivities: "",
+  unitCost: "",
+  targets: {
+    jan: "",
+    feb: "",
+    mar: "",
+    apr: "",
+    may: "",
+    jun: "",
+    jul: "",
+    aug: "",
+    sep: "",
+    oct: "",
+    nov: "",
+    dec: "",
+  },
 }
 
 function findOtherOperatingPath(componentNode) {
-    if (!componentNode || typeof componentNode !== "object") return null
+  if (!componentNode || typeof componentNode !== "object") return null
 
-    for (const [subComponentKey, keyActivities] of Object.entries(componentNode)) {
-        if (!keyActivities || typeof keyActivities !== "object") continue
+  for (const [subComponentKey, keyActivities] of Object.entries(componentNode)) {
+    if (!keyActivities || typeof keyActivities !== "object") continue
 
-        for (const keyActivityKey of Object.keys(keyActivities)) {
-            if (
-                keyActivityKey
-                    .toLowerCase()
-                    .includes("other operating cost attributed to component")
-            ) {
-                return {
-                    subComponentKey,
-                    keyActivityKey,
-                }
-            }
+    for (const keyActivityKey of Object.keys(keyActivities)) {
+      if (
+        keyActivityKey
+          .toLowerCase()
+          .includes("other operating cost attributed to component")
+      ) {
+        return {
+          subComponentKey,
+          keyActivityKey,
         }
+      }
     }
+  }
 
-    return null
+  return null
 }
 
 function toNumber(value) {
-    if (value === "" || value === null || value === undefined) return 0
-    const parsed = Number(value)
-    return Number.isNaN(parsed) ? 0 : parsed
+  if (value === "" || value === null || value === undefined) return 0
+  const parsed = Number(value)
+  return Number.isNaN(parsed) ? 0 : parsed
 }
 
 function formatCurrency(value) {
-    return new Intl.NumberFormat("en-PH", {
-        style: "currency",
-        currency: "PHP",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    }).format(value || 0)
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value || 0)
 }
 
-export default function SubmitEntry({ onAddEntry }) {
-    const navigate = useNavigate()
-    const [step, setStep] = useState(1)
-
-    const {
-        control,
-        register,
-        handleSubmit,
-        watch,
-        trigger,
-        reset,
-        resetField,
-        setValue,
-        formState: { errors },
-    } = useForm({
-        defaultValues: defaultFormValues,
-    })
-
-    const planningYears = ["2026", "2027", "2028"]
-
-    const planningYear = watch("planningYear")
-    const unit = watch("unit")
-    const component = watch("component")
-    const useOtherShortcut = watch("useOtherShortcut")
-    const subComponent = watch("subComponent")
-    const keyActivity = watch("keyActivity")
-    const selectedNo = watch("no")
-    const watchedSubActivity = watch("subActivity")
-    const titleOfActivities = watch("titleOfActivities")
-
-    const unitCost = useWatch({
-        control,
-        name: "unitCost",
-    })
-
-    const targets = useWatch({
-        control,
-        name: "targets",
-    }) || {}
-
-    const unitOptions = useMemo(() => {
-        return awpbTree.unitOptions.map((item) => item.value)
-    }, [])
-
-    const componentOptions = useMemo(() => {
-        return Object.keys(awpbTree.hierarchy || {})
-    }, [])
-
-    const currentComponentNode = useMemo(() => {
-        return awpbTree.hierarchy?.[component] || null
-    }, [component])
-
-    const otherShortcutPath = useMemo(() => {
-        return findOtherOperatingPath(currentComponentNode)
-    }, [currentComponentNode])
-
-    const rawSubComponentKeys = useMemo(() => {
-        if (!component) return []
-        return Object.keys(currentComponentNode || {})
-    }, [component, currentComponentNode])
-
-    const hasNoSubComponent =
-        rawSubComponentKeys.length === 1 && rawSubComponentKeys[0] === ""
-
-    const visibleSubComponentOptions = useMemo(() => {
-        return rawSubComponentKeys.filter((key) => key !== "")
-    }, [rawSubComponentKeys])
-
-    const subComponentKey =
-        subComponent === FALLBACK_VALUE ? "" : subComponent
-
-    const keyActivityOptions = useMemo(() => {
-        if (!component) return []
-        return Object.keys(
-            awpbTree.hierarchy?.[component]?.[subComponentKey] || {}
-        )
-    }, [component, subComponentKey])
-
-    const noOptions = useMemo(() => {
-        if (!component || !keyActivity) return []
-        return (
-            awpbTree.hierarchy?.[component]?.[subComponentKey]?.[keyActivity] || []
-        )
-    }, [component, subComponentKey, keyActivity])
-
-    const selectedNoEntry = useMemo(() => {
-        return noOptions.find((item) => String(item.no) === String(selectedNo))
-    }, [noOptions, selectedNo])
-
-    const subActivityOptions = useMemo(() => {
-        return selectedNoEntry?.subActivities || []
-    }, [selectedNoEntry])
-
-    const hasNoSubActivity =
-        Boolean(selectedNo) && subActivityOptions.length === 0
-
-    const monthlyRows = useMemo(() => {
-        const parsedUnitCost = toNumber(unitCost)
-
-        return MONTHS.map((month) => {
-            const target = toNumber(targets[month.key])
-            const amount = parsedUnitCost * target
-
-            return {
-                ...month,
-                target,
-                amount,
-            }
-        })
-    }, [unitCost, targets])
-
-    const activeMonthlyRows = useMemo(() => {
-        return monthlyRows.filter((row) => row.target > 0)
-    }, [monthlyRows])
-
-    const grandTotal = useMemo(() => {
-        return monthlyRows.reduce((sum, row) => sum + row.amount, 0)
-    }, [monthlyRows])
-
-    useEffect(() => {
-        resetField("component")
-        resetField("useOtherShortcut")
-        resetField("subComponent")
-        resetField("keyActivity")
-        resetField("no")
-        resetField("performanceIndicator")
-        resetField("subActivity")
-    }, [unit, resetField])
-
-    useEffect(() => {
-        resetField("useOtherShortcut")
-        resetField("subComponent")
-        resetField("keyActivity")
-        resetField("no")
-        resetField("performanceIndicator")
-        resetField("subActivity")
-
-        if (component && hasNoSubComponent) {
-            setValue("subComponent", FALLBACK_VALUE, {
-                shouldValidate: true,
-                shouldDirty: false,
-            })
-        }
-    }, [component, hasNoSubComponent, resetField, setValue])
-
-    useEffect(() => {
-        if (!component || !otherShortcutPath) return
-
-        if (useOtherShortcut) {
-            const targetSubComponent =
-                otherShortcutPath.subComponentKey === ""
-                    ? FALLBACK_VALUE
-                    : otherShortcutPath.subComponentKey
-
-            setValue("subComponent", targetSubComponent, {
-                shouldValidate: true,
-                shouldDirty: true,
-            })
-
-            setValue("keyActivity", otherShortcutPath.keyActivityKey, {
-                shouldValidate: true,
-                shouldDirty: true,
-            })
-
-            resetField("no")
-            resetField("performanceIndicator")
-            resetField("subActivity")
-            return
-        }
-
-        resetField("subComponent")
-        resetField("keyActivity")
-        resetField("no")
-        resetField("performanceIndicator")
-        resetField("subActivity")
-
-        if (hasNoSubComponent) {
-            setValue("subComponent", FALLBACK_VALUE, {
-                shouldValidate: true,
-                shouldDirty: false,
-            })
-        }
-    }, [
-        useOtherShortcut,
-        component,
-        otherShortcutPath,
-        hasNoSubComponent,
-        resetField,
-        setValue,
-    ])
-
-    useEffect(() => {
-        if (useOtherShortcut) return
-
-        resetField("keyActivity")
-        resetField("no")
-        resetField("performanceIndicator")
-        resetField("subActivity")
-    }, [subComponent, useOtherShortcut, resetField])
-
-    useEffect(() => {
-        resetField("no")
-        resetField("performanceIndicator")
-        resetField("subActivity")
-    }, [keyActivity, resetField])
-
-    useEffect(() => {
-        setValue(
-            "performanceIndicator",
-            selectedNoEntry?.performanceIndicator || "",
-            {
-                shouldValidate: true,
-                shouldDirty: false,
-            }
-        )
-
-        if (!selectedNo) {
-            resetField("subActivity")
-            return
-        }
-
-        if (hasNoSubActivity) {
-            setValue("subActivity", FALLBACK_VALUE, {
-                shouldValidate: true,
-                shouldDirty: false,
-            })
-        } else if (watchedSubActivity === FALLBACK_VALUE) {
-            setValue("subActivity", "", {
-                shouldValidate: true,
-                shouldDirty: false,
-            })
-        }
-    }, [
-        selectedNo,
-        selectedNoEntry,
-        hasNoSubActivity,
-        watchedSubActivity,
-        setValue,
-        resetField,
-    ])
-
-
-    const goToStep1 = async () => {
-        setStep(1)
-    }
-
-    const goToStep2 = async () => {
-        const isValid = await validateStep1()
-
-        if (isValid) {
-            setStep(2)
-        }
-    }
-
-    const goToStep3 = async () => {
-        const isValid = await validateStep2()
-
-        if (isValid) {
-            setStep(3)
-        }
-    }
-
-    const validateStep1 = async () => {
-        return await trigger([
-            "planningYear",
-            "unit",
-            "component",
-            "subComponent",
-            "keyActivity",
-            "no",
-            "performanceIndicator",
-            "subActivity",
-            "titleOfActivities",
-        ])
-    }
-
-    const validateStep2 = async () => {
-        const targetFieldNames = MONTHS.map((month) => `targets.${month.key}`)
-
-        const isValid = await trigger(["unitCost", ...targetFieldNames])
-
-        const hasAtLeastOneTarget = monthlyRows.some((row) => row.target > 0)
-
-        if (!hasAtLeastOneTarget) {
-            alert("Please enter at least one monthly target before continuing.")
-            return false
-        }
-
-        return isValid
-    }
-
-
-
-
-
-    const handleStepClick = async (targetStep) => {
-        if (targetStep === step) return
-
-        if (targetStep === 1) {
-            setStep(1)
-            return
-        }
-
-        if (targetStep === 2) {
-            const step1Valid = await validateStep1()
-            if (step1Valid) {
-                setStep(2)
-            }
-            return
-        }
-
-        if (targetStep === 3) {
-            const step1Valid = await validateStep1()
-
-            if (!step1Valid) {
-                setStep(1)
-                return
-            }
-
-            const step2Valid = await validateStep2()
-
-            if (step2Valid) {
-                setStep(3)
-            } else {
-                setStep(2)
-            }
-        }
-    }
-
-    const onSubmit = (data) => {
-        const hasAtLeastOneTarget = monthlyRows.some((row) => row.target > 0)
-
-        if (!hasAtLeastOneTarget) {
-            alert("Please enter at least one monthly target before submitting.")
-            setStep(2)
-            return
-        }
-
-        const newEntry = {
-            id:
-                typeof crypto !== "undefined" && crypto.randomUUID
-                    ? crypto.randomUUID()
-                    : String(Date.now()),
-            planningYear: data.planningYear,
-            unit: data.unit,
-            component: data.component,
-            subComponent: data.subComponent,
-            keyActivity: data.keyActivity,
-            no: data.no,
-            performanceIndicator: data.performanceIndicator,
-            subActivity: data.subActivity,
-            titleOfActivities: data.titleOfActivities,
-            unitCost: toNumber(data.unitCost),
-            monthlyBreakdown: monthlyRows.map((row) => ({
-                month: row.label,
-                target: row.target,
-                amount: row.amount,
-            })),
-            grandTotal,
-            status: "Pending Review",
-            submittedAt: new Date().toISOString(),
-        }
-
-        onAddEntry(newEntry)
-        reset(defaultFormValues)
-        setStep(1)
-        navigate("/entries")
-    }
-
-    const shortcutSubComponentLabel =
-        otherShortcutPath?.subComponentKey === ""
-            ? FALLBACK_VALUE
-            : otherShortcutPath?.subComponentKey || ""
-
-    const steps = [
-        { number: 1, label: "Classification" },
-        { number: 2, label: "Budget Computation" },
-        { number: 3, label: "Review & Submit" },
-    ]
-
+function buildFormValuesFromEntry(entry) {
+  const targets = MONTHS.reduce((acc, month) => {
+    const found = entry.monthlyBreakdown?.find((row) => row.month === month.label)
+    acc[month.key] = found ? found.target : ""
+    return acc
+  }, {})
+
+  return {
+    planningYear: entry.planningYear || "2026",
+    unit: entry.unit || "",
+    component: entry.component || "",
+    useOtherShortcut: false,
+    subComponent: entry.subComponent || "",
+    keyActivity: entry.keyActivity || "",
+    no: entry.no ? String(entry.no) : "",
+    performanceIndicator: entry.performanceIndicator || "",
+    subActivity: entry.subActivity || "",
+    titleOfActivities: entry.titleOfActivities || "",
+    unitCost: entry.unitCost ?? "",
+    targets,
+  }
+}
+
+export default function SubmitEntry({
+  onAddEntry,
+  entryToEdit,
+  onSaveEditedEntry,
+  clearEditingEntry,
+}) {
+  const navigate = useNavigate()
+  const [step, setStep] = useState(1)
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    watch,
+    trigger,
+    reset,
+    resetField,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    defaultValues: defaultFormValues,
+  })
+
+  const planningYears = ["2026", "2027", "2028"]
+  const isEditingReturnedEntry =
+    entryToEdit && entryToEdit.status === "Returned"
+
+  const planningYear = watch("planningYear")
+  const unit = watch("unit")
+  const component = watch("component")
+  const useOtherShortcut = watch("useOtherShortcut")
+  const subComponent = watch("subComponent")
+  const keyActivity = watch("keyActivity")
+  const selectedNo = watch("no")
+  const watchedSubActivity = watch("subActivity")
+  const titleOfActivities = watch("titleOfActivities")
+
+  const unitCost = useWatch({
+    control,
+    name: "unitCost",
+  })
+
+  const targets = useWatch({
+    control,
+    name: "targets",
+  }) || {}
+
+  const unitOptions = useMemo(() => {
+    return awpbTree.unitOptions.map((item) => item.value)
+  }, [])
+
+  const componentOptions = useMemo(() => {
+    return Object.keys(awpbTree.hierarchy || {})
+  }, [])
+
+  const currentComponentNode = useMemo(() => {
+    return awpbTree.hierarchy?.[component] || null
+  }, [component])
+
+  const otherShortcutPath = useMemo(() => {
+    return findOtherOperatingPath(currentComponentNode)
+  }, [currentComponentNode])
+
+  const rawSubComponentKeys = useMemo(() => {
+    if (!component) return []
+    return Object.keys(currentComponentNode || {})
+  }, [component, currentComponentNode])
+
+  const hasNoSubComponent =
+    rawSubComponentKeys.length === 1 && rawSubComponentKeys[0] === ""
+
+  const visibleSubComponentOptions = useMemo(() => {
+    return rawSubComponentKeys.filter((key) => key !== "")
+  }, [rawSubComponentKeys])
+
+  const subComponentKey =
+    subComponent === FALLBACK_VALUE ? "" : subComponent
+
+  const keyActivityOptions = useMemo(() => {
+    if (!component) return []
+    return Object.keys(
+      awpbTree.hierarchy?.[component]?.[subComponentKey] || {}
+    )
+  }, [component, subComponentKey])
+
+  const noOptions = useMemo(() => {
+    if (!component || !keyActivity) return []
     return (
-        <div className="max-w-6xl space-y-6">
-            <div>
-                <h1 className="text-2xl font-bold">Submit Entry</h1>
+      awpbTree.hierarchy?.[component]?.[subComponentKey]?.[keyActivity] || []
+    )
+  }, [component, subComponentKey, keyActivity])
+
+  const selectedNoEntry = useMemo(() => {
+    return noOptions.find((item) => String(item.no) === String(selectedNo))
+  }, [noOptions, selectedNo])
+
+  const subActivityOptions = useMemo(() => {
+    return selectedNoEntry?.subActivities || []
+  }, [selectedNoEntry])
+
+  const hasNoSubActivity =
+    Boolean(selectedNo) && subActivityOptions.length === 0
+
+  const monthlyRows = useMemo(() => {
+    const parsedUnitCost = toNumber(unitCost)
+
+    return MONTHS.map((month) => {
+      const target = toNumber(targets[month.key])
+      const amount = parsedUnitCost * target
+
+      return {
+        ...month,
+        target,
+        amount,
+      }
+    })
+  }, [unitCost, targets])
+
+  const activeMonthlyRows = useMemo(() => {
+    return monthlyRows.filter((row) => row.target > 0)
+  }, [monthlyRows])
+
+  const grandTotal = useMemo(() => {
+    return monthlyRows.reduce((sum, row) => sum + row.amount, 0)
+  }, [monthlyRows])
+
+  useEffect(() => {
+    if (entryToEdit && entryToEdit.status === "Returned") {
+      reset(buildFormValuesFromEntry(entryToEdit))
+      setStep(1)
+    }
+  }, [entryToEdit, reset])
+
+  useEffect(() => {
+    resetField("component")
+    resetField("useOtherShortcut")
+    resetField("subComponent")
+    resetField("keyActivity")
+    resetField("no")
+    resetField("performanceIndicator")
+    resetField("subActivity")
+  }, [unit, resetField])
+
+  useEffect(() => {
+    resetField("useOtherShortcut")
+    resetField("subComponent")
+    resetField("keyActivity")
+    resetField("no")
+    resetField("performanceIndicator")
+    resetField("subActivity")
+
+    if (component && hasNoSubComponent) {
+      setValue("subComponent", FALLBACK_VALUE, {
+        shouldValidate: true,
+        shouldDirty: false,
+      })
+    }
+  }, [component, hasNoSubComponent, resetField, setValue])
+
+  useEffect(() => {
+    if (!component || !otherShortcutPath) return
+
+    if (useOtherShortcut) {
+      const targetSubComponent =
+        otherShortcutPath.subComponentKey === ""
+          ? FALLBACK_VALUE
+          : otherShortcutPath.subComponentKey
+
+      setValue("subComponent", targetSubComponent, {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+
+      setValue("keyActivity", otherShortcutPath.keyActivityKey, {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+
+      resetField("no")
+      resetField("performanceIndicator")
+      resetField("subActivity")
+      return
+    }
+
+    resetField("subComponent")
+    resetField("keyActivity")
+    resetField("no")
+    resetField("performanceIndicator")
+    resetField("subActivity")
+
+    if (hasNoSubComponent) {
+      setValue("subComponent", FALLBACK_VALUE, {
+        shouldValidate: true,
+        shouldDirty: false,
+      })
+    }
+  }, [
+    useOtherShortcut,
+    component,
+    otherShortcutPath,
+    hasNoSubComponent,
+    resetField,
+    setValue,
+  ])
+
+  useEffect(() => {
+    if (useOtherShortcut) return
+
+    resetField("keyActivity")
+    resetField("no")
+    resetField("performanceIndicator")
+    resetField("subActivity")
+  }, [subComponent, useOtherShortcut, resetField])
+
+  useEffect(() => {
+    resetField("no")
+    resetField("performanceIndicator")
+    resetField("subActivity")
+  }, [keyActivity, resetField])
+
+  useEffect(() => {
+    setValue(
+      "performanceIndicator",
+      selectedNoEntry?.performanceIndicator || "",
+      {
+        shouldValidate: true,
+        shouldDirty: false,
+      }
+    )
+
+    if (!selectedNo) {
+      resetField("subActivity")
+      return
+    }
+
+    if (hasNoSubActivity) {
+      setValue("subActivity", FALLBACK_VALUE, {
+        shouldValidate: true,
+        shouldDirty: false,
+      })
+    } else if (watchedSubActivity === FALLBACK_VALUE) {
+      setValue("subActivity", "", {
+        shouldValidate: true,
+        shouldDirty: false,
+      })
+    }
+  }, [
+    selectedNo,
+    selectedNoEntry,
+    hasNoSubActivity,
+    watchedSubActivity,
+    setValue,
+    resetField,
+  ])
+
+  const validateStep1 = async () => {
+    return await trigger([
+      "planningYear",
+      "unit",
+      "component",
+      "subComponent",
+      "keyActivity",
+      "no",
+      "performanceIndicator",
+      "subActivity",
+      "titleOfActivities",
+    ])
+  }
+
+  const validateStep2 = async () => {
+    const targetFieldNames = MONTHS.map((month) => `targets.${month.key}`)
+
+    const isValid = await trigger(["unitCost", ...targetFieldNames])
+
+    const hasAtLeastOneTarget = monthlyRows.some((row) => row.target > 0)
+
+    if (!hasAtLeastOneTarget) {
+      alert("Please enter at least one monthly target before continuing.")
+      return false
+    }
+
+    return isValid
+  }
+
+  const handleStepClick = async (targetStep) => {
+    if (targetStep === step) return
+
+    if (targetStep === 1) {
+      setStep(1)
+      return
+    }
+
+    if (targetStep === 2) {
+      const step1Valid = await validateStep1()
+      if (step1Valid) {
+        setStep(2)
+      }
+      return
+    }
+
+    if (targetStep === 3) {
+      const step1Valid = await validateStep1()
+
+      if (!step1Valid) {
+        setStep(1)
+        return
+      }
+
+      const step2Valid = await validateStep2()
+
+      if (step2Valid) {
+        setStep(3)
+      } else {
+        setStep(2)
+      }
+    }
+  }
+
+  const goToStep1 = async () => {
+    setStep(1)
+  }
+
+  const goToStep2 = async () => {
+    const isValid = await validateStep1()
+
+    if (isValid) {
+      setStep(2)
+    }
+  }
+
+  const goToStep3 = async () => {
+    const isValid = await validateStep2()
+
+    if (isValid) {
+      setStep(3)
+    }
+  }
+
+  const onSubmit = (data) => {
+    const hasAtLeastOneTarget = monthlyRows.some((row) => row.target > 0)
+
+    if (!hasAtLeastOneTarget) {
+      alert("Please enter at least one monthly target before submitting.")
+      setStep(2)
+      return
+    }
+
+    if (isEditingReturnedEntry) {
+      const updatedEntry = {
+        ...entryToEdit,
+        planningYear: data.planningYear,
+        unit: data.unit,
+        component: data.component,
+        subComponent: data.subComponent,
+        keyActivity: data.keyActivity,
+        no: data.no,
+        performanceIndicator: data.performanceIndicator,
+        subActivity: data.subActivity,
+        titleOfActivities: data.titleOfActivities,
+        unitCost: toNumber(data.unitCost),
+        monthlyBreakdown: monthlyRows.map((row) => ({
+          month: row.label,
+          target: row.target,
+          amount: row.amount,
+        })),
+        grandTotal,
+        status: "Pending Review",
+        adminComment: "",
+        reviewedAt: "",
+        resubmittedAt: new Date().toISOString(),
+      }
+
+      onSaveEditedEntry(entryToEdit.id, updatedEntry)
+      reset(defaultFormValues)
+      setStep(1)
+      clearEditingEntry?.()
+      navigate("/entries")
+      return
+    }
+
+    const newEntry = {
+      id:
+        typeof crypto !== "undefined" && crypto.randomUUID
+          ? crypto.randomUUID()
+          : String(Date.now()),
+      planningYear: data.planningYear,
+      unit: data.unit,
+      component: data.component,
+      subComponent: data.subComponent,
+      keyActivity: data.keyActivity,
+      no: data.no,
+      performanceIndicator: data.performanceIndicator,
+      subActivity: data.subActivity,
+      titleOfActivities: data.titleOfActivities,
+      unitCost: toNumber(data.unitCost),
+      monthlyBreakdown: monthlyRows.map((row) => ({
+        month: row.label,
+        target: row.target,
+        amount: row.amount,
+      })),
+      grandTotal,
+      status: "Pending Review",
+      adminComment: "",
+      submittedAt: new Date().toISOString(),
+    }
+
+    onAddEntry(newEntry)
+    reset(defaultFormValues)
+    setStep(1)
+    clearEditingEntry?.()
+    navigate("/entries")
+  }
+
+  const shortcutSubComponentLabel =
+    otherShortcutPath?.subComponentKey === ""
+      ? FALLBACK_VALUE
+      : otherShortcutPath?.subComponentKey || ""
+
+  const steps = [
+    { number: 1, label: "Classification" },
+    { number: 2, label: "Budget Computation" },
+    { number: 3, label: "Review & Submit" },
+  ]
+
+  return (
+    <div className="max-w-6xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">
+          {isEditingReturnedEntry ? "Edit Returned Entry" : "Submit Entry"}
+        </h1>
+        <p className="text-sm text-gray-500">
+          Complete the AWPB entry in three guided steps.
+        </p>
+      </div>
+
+      {isEditingReturnedEntry && entryToEdit?.adminComment && (
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <h2 className="mb-2 font-medium text-amber-900">Revision Note</h2>
+          <p className="text-sm text-amber-900">{entryToEdit.adminComment}</p>
+        </div>
+      )}
+
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-3">
+          {steps.map((item) => {
+            const isActive = step === item.number
+            const isDone = step > item.number
+
+            return (
+              <button
+                key={item.number}
+                type="button"
+                onClick={() => handleStepClick(item.number)}
+                className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${
+                  isActive
+                    ? "border-black bg-black text-white"
+                    : isDone
+                    ? "border-gray-300 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                }`}
+              >
+                Step {item.number}: {item.label}
+              </button>
+            )
+          })}
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          {step === 1 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold">Classification</h2>
                 <p className="text-sm text-gray-500">
-                    Complete the AWPB entry in three guided steps.
+                  Select the hierarchy that matches the official AWPB structure.
                 </p>
-            </div>
+              </div>
 
-            <div className="rounded-xl border bg-white p-6 shadow-sm">
-                <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-3">
-                    {steps.map((item) => {
-                        const isActive = step === item.number
-                        const isDone = step > item.number
-
-                        return (
-                            <button
-                                key={item.number}
-                                type="button"
-                                onClick={() => handleStepClick(item.number)}
-                                className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${isActive
-                                        ? "border-black bg-black text-white"
-                                        : isDone
-                                            ? "border-gray-300 bg-gray-100 text-gray-800 hover:bg-gray-200"
-                                            : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-                                    }`}
-                            >
-                                Step {item.number}: {item.label}
-                            </button>
-                        )
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Planning Year
+                  </label>
+                  <select
+                    {...register("planningYear", {
+                      required: "Planning Year is required",
                     })}
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+                  >
+                    {planningYears.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.planningYear && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.planningYear.message}
+                    </p>
+                  )}
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    {step === 1 && (
-                        <div className="space-y-6">
-                            <div>
-                                <h2 className="text-lg font-semibold">Classification</h2>
-                                <p className="text-sm text-gray-500">
-                                    Select the hierarchy that matches the official AWPB structure.
-                                </p>
-                            </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium">Unit</label>
+                  <select
+                    {...register("unit", {
+                      required: "Unit is required",
+                    })}
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+                  >
+                    <option value="">Select unit</option>
+                    {unitOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.unit && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.unit.message}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium">
-                                        Planning Year
-                                    </label>
-                                    <select
-                                        {...register("planningYear", {
-                                            required: "Planning Year is required",
-                                        })}
-                                        className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-                                    >
-                                        {planningYears.map((year) => (
-                                            <option key={year} value={year}>
-                                                {year}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.planningYear && (
-                                        <p className="mt-1 text-sm text-red-600">
-                                            {errors.planningYear.message}
-                                        </p>
-                                    )}
-                                </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Component
+                  </label>
+                  <select
+                    {...register("component", {
+                      required: "Component is required",
+                    })}
+                    disabled={!unit}
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
+                  >
+                    <option value="">Select component</option>
+                    {componentOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.component && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.component.message}
+                    </p>
+                  )}
+                </div>
 
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium">Unit</label>
-                                    <select
-                                        {...register("unit", {
-                                            required: "Unit is required",
-                                        })}
-                                        className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-                                    >
-                                        <option value="">Select unit</option>
-                                        {unitOptions.map((item) => (
-                                            <option key={item} value={item}>
-                                                {item}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.unit && (
-                                        <p className="mt-1 text-sm text-red-600">
-                                            {errors.unit.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                {component && otherShortcutPath ? (
+                  <div className="rounded-lg border bg-amber-50 p-4">
+                    <label className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        {...register("useOtherShortcut")}
+                        className="mt-1"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-amber-900">
+                          Continue to Other Operating Cost
+                        </p>
+                        <p className="text-xs text-amber-800">
+                          This will automatically select the correct Other Operating Cost path.
+                        </p>
+                      </div>
+                    </label>
+                  </div>
+                ) : (
+                  <div />
+                )}
+              </div>
 
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium">
-                                        Component
-                                    </label>
-                                    <select
-                                        {...register("component", {
-                                            required: "Component is required",
-                                        })}
-                                        disabled={!unit}
-                                        className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
-                                    >
-                                        <option value="">Select component</option>
-                                        {componentOptions.map((item) => (
-                                            <option key={item} value={item}>
-                                                {item}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.component && (
-                                        <p className="mt-1 text-sm text-red-600">
-                                            {errors.component.message}
-                                        </p>
-                                    )}
-                                </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Sub component
+                  </label>
 
-                                {component && otherShortcutPath ? (
-                                    <div className="rounded-lg border bg-amber-50 p-4">
-                                        <label className="flex items-start gap-3">
-                                            <input
-                                                type="checkbox"
-                                                {...register("useOtherShortcut")}
-                                                className="mt-1"
-                                            />
-                                            <div>
-                                                <p className="text-sm font-medium text-amber-900">
-                                                    Continue to Other Operating Cost
-                                                </p>
-                                                <p className="text-xs text-amber-800">
-                                                    This will automatically select the correct Other
-                                                    Operating Cost path.
-                                                </p>
-                                            </div>
-                                        </label>
-                                    </div>
-                                ) : (
-                                    <div />
-                                )}
-                            </div>
+                  {component && hasNoSubComponent ? (
+                    <>
+                      <input
+                        type="hidden"
+                        {...register("subComponent", {
+                          required: "Sub component is required",
+                        })}
+                      />
+                      <input
+                        type="text"
+                        readOnly
+                        value={FALLBACK_VALUE}
+                        className="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600 outline-none"
+                      />
+                    </>
+                  ) : useOtherShortcut && otherShortcutPath ? (
+                    <>
+                      <input
+                        type="hidden"
+                        {...register("subComponent", {
+                          required: "Sub component is required",
+                        })}
+                      />
+                      <input
+                        type="text"
+                        readOnly
+                        value={shortcutSubComponentLabel}
+                        className="w-full rounded-lg border bg-amber-50 px-3 py-2 text-sm text-amber-900 outline-none"
+                      />
+                    </>
+                  ) : (
+                    <select
+                      {...register("subComponent", {
+                        required: "Sub component is required",
+                      })}
+                      disabled={!component}
+                      className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
+                    >
+                      <option value="">Select sub component</option>
+                      {visibleSubComponentOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  )}
 
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium">
-                                        Sub component
-                                    </label>
+                  {errors.subComponent && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.subComponent.message}
+                    </p>
+                  )}
+                </div>
 
-                                    {component && hasNoSubComponent ? (
-                                        <>
-                                            <input
-                                                type="hidden"
-                                                {...register("subComponent", {
-                                                    required: "Sub component is required",
-                                                })}
-                                            />
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                value={FALLBACK_VALUE}
-                                                className="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600 outline-none"
-                                            />
-                                        </>
-                                    ) : useOtherShortcut && otherShortcutPath ? (
-                                        <>
-                                            <input
-                                                type="hidden"
-                                                {...register("subComponent", {
-                                                    required: "Sub component is required",
-                                                })}
-                                            />
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                value={shortcutSubComponentLabel}
-                                                className="w-full rounded-lg border bg-amber-50 px-3 py-2 text-sm text-amber-900 outline-none"
-                                            />
-                                        </>
-                                    ) : (
-                                        <select
-                                            {...register("subComponent", {
-                                                required: "Sub component is required",
-                                            })}
-                                            disabled={!component}
-                                            className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
-                                        >
-                                            <option value="">Select sub component</option>
-                                            {visibleSubComponentOptions.map((item) => (
-                                                <option key={item} value={item}>
-                                                    {item}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    )}
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Key Activity
+                  </label>
 
-                                    {errors.subComponent && (
-                                        <p className="mt-1 text-sm text-red-600">
-                                            {errors.subComponent.message}
-                                        </p>
-                                    )}
-                                </div>
+                  {useOtherShortcut && otherShortcutPath ? (
+                    <>
+                      <input
+                        type="hidden"
+                        {...register("keyActivity", {
+                          required: "Key Activity is required",
+                        })}
+                      />
+                      <input
+                        type="text"
+                        readOnly
+                        value={otherShortcutPath.keyActivityKey}
+                        className="w-full rounded-lg border bg-amber-50 px-3 py-2 text-sm text-amber-900 outline-none"
+                      />
+                    </>
+                  ) : (
+                    <select
+                      {...register("keyActivity", {
+                        required: "Key Activity is required",
+                      })}
+                      disabled={
+                        !component || (!hasNoSubComponent && !subComponent)
+                      }
+                      className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
+                    >
+                      <option value="">Select key activity</option>
+                      {keyActivityOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  )}
 
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium">
-                                        Key Activity
-                                    </label>
+                  {errors.keyActivity && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.keyActivity.message}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-                                    {useOtherShortcut && otherShortcutPath ? (
-                                        <>
-                                            <input
-                                                type="hidden"
-                                                {...register("keyActivity", {
-                                                    required: "Key Activity is required",
-                                                })}
-                                            />
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                value={otherShortcutPath.keyActivityKey}
-                                                className="w-full rounded-lg border bg-amber-50 px-3 py-2 text-sm text-amber-900 outline-none"
-                                            />
-                                        </>
-                                    ) : (
-                                        <select
-                                            {...register("keyActivity", {
-                                                required: "Key Activity is required",
-                                            })}
-                                            disabled={
-                                                !component || (!hasNoSubComponent && !subComponent)
-                                            }
-                                            className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
-                                        >
-                                            <option value="">Select key activity</option>
-                                            {keyActivityOptions.map((item) => (
-                                                <option key={item} value={item}>
-                                                    {item}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    )}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">No.</label>
+                  <select
+                    {...register("no", {
+                      required: "No. is required",
+                    })}
+                    disabled={!keyActivity}
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
+                  >
+                    <option value="">Select no.</option>
+                    {noOptions.map((item) => (
+                      <option key={item.no} value={String(item.no)}>
+                        {item.no} - {item.performanceIndicator}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.no && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.no.message}
+                    </p>
+                  )}
+                </div>
 
-                                    {errors.keyActivity && (
-                                        <p className="mt-1 text-sm text-red-600">
-                                            {errors.keyActivity.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Performance Indicator
+                  </label>
+                  <input
+                    type="text"
+                    readOnly
+                    {...register("performanceIndicator", {
+                      required: "Performance Indicator is required",
+                    })}
+                    className="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none"
+                  />
+                  {errors.performanceIndicator && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.performanceIndicator.message}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium">No.</label>
-                                    <select
-                                        {...register("no", {
-                                            required: "No. is required",
-                                        })}
-                                        disabled={!keyActivity}
-                                        className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
-                                    >
-                                        <option value="">Select no.</option>
-                                        {noOptions.map((item) => (
-                                            <option key={item.no} value={String(item.no)}>
-                                                {item.no} - {item.performanceIndicator}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {errors.no && (
-                                        <p className="mt-1 text-sm text-red-600">
-                                            {errors.no.message}
-                                        </p>
-                                    )}
-                                </div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Sub Activity
+                  </label>
 
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium">
-                                        Performance Indicator
-                                    </label>
-                                    <input
-                                        type="text"
-                                        readOnly
-                                        {...register("performanceIndicator", {
-                                            required: "Performance Indicator is required",
-                                        })}
-                                        className="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none"
-                                    />
-                                    {errors.performanceIndicator && (
-                                        <p className="mt-1 text-sm text-red-600">
-                                            {errors.performanceIndicator.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                  {hasNoSubActivity ? (
+                    <>
+                      <input
+                        type="hidden"
+                        {...register("subActivity", {
+                          required: "Sub Activity is required",
+                        })}
+                      />
+                      <input
+                        type="text"
+                        readOnly
+                        value={FALLBACK_VALUE}
+                        className="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600 outline-none"
+                      />
+                    </>
+                  ) : (
+                    <select
+                      {...register("subActivity", {
+                        required: "Sub Activity is required",
+                      })}
+                      disabled={!selectedNo}
+                      className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
+                    >
+                      <option value="">Select sub activity</option>
+                      {subActivityOptions.map((item) => (
+                        <option key={item} value={item}>
+                          {item}
+                        </option>
+                      ))}
+                    </select>
+                  )}
 
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium">
-                                        Sub Activity
-                                    </label>
+                  {errors.subActivity && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.subActivity.message}
+                    </p>
+                  )}
+                </div>
 
-                                    {hasNoSubActivity ? (
-                                        <>
-                                            <input
-                                                type="hidden"
-                                                {...register("subActivity", {
-                                                    required: "Sub Activity is required",
-                                                })}
-                                            />
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                value={FALLBACK_VALUE}
-                                                className="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600 outline-none"
-                                            />
-                                        </>
-                                    ) : (
-                                        <select
-                                            {...register("subActivity", {
-                                                required: "Sub Activity is required",
-                                            })}
-                                            disabled={!selectedNo}
-                                            className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
-                                        >
-                                            <option value="">Select sub activity</option>
-                                            {subActivityOptions.map((item) => (
-                                                <option key={item} value={item}>
-                                                    {item}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    )}
+                <div>
+                  <label className="mb-2 block text-sm font-medium">
+                    Title of Activities
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter title of activities"
+                    {...register("titleOfActivities", {
+                      required: "Title of Activities is required",
+                    })}
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+                  />
+                  {errors.titleOfActivities && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.titleOfActivities.message}
+                    </p>
+                  )}
+                </div>
+              </div>
 
-                                    {errors.subActivity && (
-                                        <p className="mt-1 text-sm text-red-600">
-                                            {errors.subActivity.message}
-                                        </p>
-                                    )}
-                                </div>
+              <div className="flex justify-end gap-3">
+                {isEditingReturnedEntry ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearEditingEntry?.()
+                      navigate("/entries")
+                    }}
+                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                  >
+                    Cancel Edit
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => reset(defaultFormValues)}
+                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                  >
+                    Clear Form
+                  </button>
+                )}
 
-                                <div>
-                                    <label className="mb-2 block text-sm font-medium">
-                                        Title of Activities
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="Enter title of activities"
-                                        {...register("titleOfActivities", {
-                                            required: "Title of Activities is required",
-                                        })}
-                                        className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-                                    />
-                                    {errors.titleOfActivities && (
-                                        <p className="mt-1 text-sm text-red-600">
-                                            {errors.titleOfActivities.message}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => reset(defaultFormValues)}
-                                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
-                                >
-                                    Clear Form
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={goToStep2}
-                                    className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {step === 2 && (
-                        <div className="space-y-6">
-                            <div>
-                                <h2 className="text-lg font-semibold">Budget Computation</h2>
-                                <p className="text-sm text-gray-500">
-                                    Monthly amount is automatically computed as Unit Cost × Monthly
-                                    Target.
-                                </p>
-                            </div>
-
-                            <div className="max-w-sm">
-                                <label className="mb-2 block text-sm font-medium">
-                                    Unit Cost
-                                </label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    placeholder="Enter unit cost"
-                                    {...register("unitCost", {
-                                        setValueAs: (value) => (value === "" ? "" : Number(value)),
-                                        required: "Unit Cost is required",
-                                        min: {
-                                            value: 0,
-                                            message: "Unit Cost cannot be negative",
-                                        },
-                                    })}
-                                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-                                />
-                                {errors.unitCost && (
-                                    <p className="mt-1 text-sm text-red-600">
-                                        {errors.unitCost.message}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="overflow-x-auto rounded-xl border">
-                                <table className="w-full min-w-[700px] text-sm">
-                                    <thead className="bg-gray-100">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left font-medium">Month</th>
-                                            <th className="px-4 py-3 text-left font-medium">Target</th>
-                                            <th className="px-4 py-3 text-left font-medium">
-                                                Computed Amount
-                                            </th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {monthlyRows.map((row, index) => (
-                                            <tr
-                                                key={row.key}
-                                                className={index !== 0 ? "border-t" : ""}
-                                            >
-                                                <td className="px-4 py-3 font-medium">{row.label}</td>
-                                                <td className="px-4 py-3">
-                                                    <input
-                                                        type="number"
-                                                        step="any"
-                                                        min="0"
-                                                        placeholder="0"
-                                                        {...register(`targets.${row.key}`, {
-                                                            setValueAs: (value) =>
-                                                                value === "" ? "" : Number(value),
-                                                            min: {
-                                                                value: 0,
-                                                                message: "Target cannot be negative",
-                                                            },
-                                                        })}
-                                                        className="w-32 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-                                                    />
-                                                </td>
-                                                <td className="px-4 py-3 text-gray-700">
-                                                    {formatCurrency(row.amount)}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                    <tfoot className="border-t bg-gray-50">
-                                        <tr>
-                                            <td className="px-4 py-3 font-semibold" colSpan={2}>
-                                                Grand Total
-                                            </td>
-                                            <td className="px-4 py-3 font-semibold">
-                                                {formatCurrency(grandTotal)}
-                                            </td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={goToStep1}
-                                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
-                                >
-                                    Back
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={goToStep3}
-                                    className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-                                >
-                                    Next
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    {step === 3 && (
-                        <div className="space-y-6">
-                            <div>
-                                <h2 className="text-lg font-semibold">Review & Submit</h2>
-                                <p className="text-sm text-gray-500">
-                                    Review the entry before submitting it to My Entries.
-                                </p>
-                            </div>
-
-                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                <div className="rounded-xl border bg-gray-50 p-4">
-                                    <h3 className="mb-3 font-medium">Entry Details</h3>
-
-                                    <div className="space-y-2 text-sm">
-                                        <p>
-                                            <span className="font-medium">Planning Year:</span>{" "}
-                                            {planningYear || "N/A"}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">Unit:</span> {unit || "N/A"}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">Component:</span>{" "}
-                                            {component || "N/A"}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">Sub component:</span>{" "}
-                                            {subComponent || "N/A"}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">Key Activity:</span>{" "}
-                                            {keyActivity || "N/A"}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">No.:</span>{" "}
-                                            {selectedNo || "N/A"}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">Performance Indicator:</span>{" "}
-                                            {selectedNoEntry?.performanceIndicator || "N/A"}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">Sub Activity:</span>{" "}
-                                            {watchedSubActivity || "N/A"}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">Title of Activities:</span>{" "}
-                                            {titleOfActivities || "N/A"}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div className="rounded-xl border bg-gray-50 p-4">
-                                    <h3 className="mb-3 font-medium">Budget Summary</h3>
-
-                                    <div className="space-y-2 text-sm">
-                                        <p>
-                                            <span className="font-medium">Unit Cost:</span>{" "}
-                                            {formatCurrency(toNumber(unitCost))}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">Active Months:</span>{" "}
-                                            {activeMonthlyRows.length > 0
-                                                ? activeMonthlyRows.map((row) => row.label).join(", ")
-                                                : "None"}
-                                        </p>
-                                        <p>
-                                            <span className="font-medium">Grand Total:</span>{" "}
-                                            {formatCurrency(grandTotal)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {activeMonthlyRows.length > 0 && (
-                                <div className="rounded-xl border bg-white p-4">
-                                    <h3 className="mb-3 font-medium">Monthly Breakdown Preview</h3>
-
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead className="bg-gray-100">
-                                                <tr>
-                                                    <th className="px-3 py-2 text-left">Month</th>
-                                                    <th className="px-3 py-2 text-left">Target</th>
-                                                    <th className="px-3 py-2 text-left">Amount</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {activeMonthlyRows.map((row, index) => (
-                                                    <tr
-                                                        key={row.key}
-                                                        className={index !== 0 ? "border-t" : ""}
-                                                    >
-                                                        <td className="px-3 py-2">{row.label}</td>
-                                                        <td className="px-3 py-2">{row.target}</td>
-                                                        <td className="px-3 py-2">
-                                                            {formatCurrency(row.amount)}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setStep(2)}
-                                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
-                                >
-                                    Back
-                                </button>
-
-                                <button
-                                    type="submit"
-                                    className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-                                >
-                                    Submit to My Entries
-                                </button>
-                            </div>
-                        </div>
-                    )}
-                </form>
+                <button
+                  type="button"
+                  onClick={goToStep2}
+                  className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                >
+                  Next
+                </button>
+              </div>
             </div>
-        </div>
-    )
+          )}
+
+          {step === 2 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold">Budget Computation</h2>
+                <p className="text-sm text-gray-500">
+                  Monthly amount is automatically computed as Unit Cost × Monthly Target.
+                </p>
+              </div>
+
+              <div className="max-w-sm">
+                <label className="mb-2 block text-sm font-medium">
+                  Unit Cost
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="Enter unit cost"
+                  {...register("unitCost", {
+                    setValueAs: (value) => (value === "" ? "" : Number(value)),
+                    required: "Unit Cost is required",
+                    min: {
+                      value: 0,
+                      message: "Unit Cost cannot be negative",
+                    },
+                  })}
+                  className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+                />
+                {errors.unitCost && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.unitCost.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="overflow-x-auto rounded-xl border">
+                <table className="w-full min-w-[700px] text-sm">
+                  <thead className="bg-gray-100">
+                    <tr>
+                      <th className="px-4 py-3 text-left font-medium">Month</th>
+                      <th className="px-4 py-3 text-left font-medium">Target</th>
+                      <th className="px-4 py-3 text-left font-medium">Computed Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthlyRows.map((row, index) => (
+                      <tr
+                        key={row.key}
+                        className={index !== 0 ? "border-t" : ""}
+                      >
+                        <td className="px-4 py-3 font-medium">{row.label}</td>
+                        <td className="px-4 py-3">
+                          <input
+                            type="number"
+                            step="any"
+                            min="0"
+                            placeholder="0"
+                            {...register(`targets.${row.key}`, {
+                              setValueAs: (value) =>
+                                value === "" ? "" : Number(value),
+                              min: {
+                                value: 0,
+                                message: "Target cannot be negative",
+                              },
+                            })}
+                            className="w-32 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+                          />
+                        </td>
+                        <td className="px-4 py-3 text-gray-700">
+                          {formatCurrency(row.amount)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="border-t bg-gray-50">
+                    <tr>
+                      <td className="px-4 py-3 font-semibold" colSpan={2}>
+                        Grand Total
+                      </td>
+                      <td className="px-4 py-3 font-semibold">
+                        {formatCurrency(grandTotal)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={goToStep1}
+                  className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                >
+                  Back
+                </button>
+
+                <button
+                  type="button"
+                  onClick={goToStep3}
+                  className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-semibold">Review & Submit</h2>
+                <p className="text-sm text-gray-500">
+                  Review the entry before submitting it to My Entries.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="rounded-xl border bg-gray-50 p-4">
+                  <h3 className="mb-3 font-medium">Entry Details</h3>
+
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium">Planning Year:</span> {planningYear || "N/A"}</p>
+                    <p><span className="font-medium">Unit:</span> {unit || "N/A"}</p>
+                    <p><span className="font-medium">Component:</span> {component || "N/A"}</p>
+                    <p><span className="font-medium">Sub component:</span> {subComponent || "N/A"}</p>
+                    <p><span className="font-medium">Key Activity:</span> {keyActivity || "N/A"}</p>
+                    <p><span className="font-medium">No.:</span> {selectedNo || "N/A"}</p>
+                    <p><span className="font-medium">Performance Indicator:</span> {selectedNoEntry?.performanceIndicator || "N/A"}</p>
+                    <p><span className="font-medium">Sub Activity:</span> {watchedSubActivity || "N/A"}</p>
+                    <p><span className="font-medium">Title of Activities:</span> {titleOfActivities || "N/A"}</p>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border bg-gray-50 p-4">
+                  <h3 className="mb-3 font-medium">Budget Summary</h3>
+
+                  <div className="space-y-2 text-sm">
+                    <p><span className="font-medium">Unit Cost:</span> {formatCurrency(toNumber(unitCost))}</p>
+                    <p>
+                      <span className="font-medium">Active Months:</span>{" "}
+                      {activeMonthlyRows.length > 0
+                        ? activeMonthlyRows.map((row) => row.label).join(", ")
+                        : "None"}
+                    </p>
+                    <p><span className="font-medium">Grand Total:</span> {formatCurrency(grandTotal)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {activeMonthlyRows.length > 0 && (
+                <div className="rounded-xl border bg-white p-4">
+                  <h3 className="mb-3 font-medium">Monthly Breakdown Preview</h3>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="px-3 py-2 text-left">Month</th>
+                          <th className="px-3 py-2 text-left">Target</th>
+                          <th className="px-3 py-2 text-left">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {activeMonthlyRows.map((row, index) => (
+                          <tr
+                            key={row.key}
+                            className={index !== 0 ? "border-t" : ""}
+                          >
+                            <td className="px-3 py-2">{row.label}</td>
+                            <td className="px-3 py-2">{row.target}</td>
+                            <td className="px-3 py-2">
+                              {formatCurrency(row.amount)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                >
+                  Back
+                </button>
+
+                <button
+                  type="submit"
+                  className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                >
+                  {isEditingReturnedEntry ? "Resubmit Entry" : "Submit to My Entries"}
+                </button>
+              </div>
+            </div>
+          )}
+        </form>
+      </div>
+    </div>
+  )
 }
