@@ -2,7 +2,7 @@ import { useMemo, useState } from "react"
 import { Navigate, Route, Routes } from "react-router-dom"
 import AppLayout from "./components/layout/AppLayout"
 
-import Dashboard from "./pages/Dashboard"
+import Home from "./pages/Home"
 import MyEntries from "./pages/MyEntries"
 import SubmitEntry from "./pages/SubmitEntry"
 import AdminReview from "./pages/AdminReview"
@@ -41,14 +41,11 @@ function App() {
 
   const navItems = useMemo(() => {
     if (currentRole === "admin") {
-      return [
-        { to: "/", label: "Dashboard", icon: "dashboard" },
-        { to: "/admin/review", label: "Admin Review", icon: "review" },
-      ]
+      return [{ to: "/admin/review", label: "Admin Review", icon: "review" }]
     }
 
     return [
-      { to: "/", label: "Dashboard", icon: "dashboard" },
+      { to: "/", label: "Home", icon: "dashboard" },
       { to: "/entries", label: "My Entries", icon: "entries" },
       { to: "/submit", label: "Submit Entry", icon: "submit" },
     ]
@@ -66,7 +63,16 @@ function App() {
       }}
     >
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route
+          path="/"
+          element={
+            currentRole === "encoder" ? (
+              <Home entries={entries} />
+            ) : (
+              <Navigate to="/admin/review" replace />
+            )
+          }
+        />
 
         <Route
           path="/entries"
