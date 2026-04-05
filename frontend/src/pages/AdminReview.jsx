@@ -37,8 +37,27 @@ function getStatusClasses(status) {
   }
 }
 
-export default function AdminReview({ entries = [], onUpdateEntry }) {
+function isSubmissionWindowOpen(submissionWindow) {
+  const { startDate, endDate } = submissionWindow || {}
+
+  if (!startDate || !endDate) return false
+
+  const today = new Date()
+  const start = new Date(`${startDate}T00:00:00`)
+  const end = new Date(`${endDate}T23:59:59`)
+
+  return today >= start && today <= end
+}
+
+export default function AdminReview({
+  entries = [],
+  onUpdateEntry,
+  submissionWindow,
+  onUpdateSubmissionWindow,
+}) {
   const [selectedEntry, setSelectedEntry] = useState(null)
+
+  const windowOpen = isSubmissionWindowOpen(submissionWindow)
 
   const stats = useMemo(() => {
     return {
@@ -93,6 +112,59 @@ export default function AdminReview({ entries = [], onUpdateEntry }) {
         <p className="text-sm text-gray-500">
           Review submitted AWPB entries and update their status.
         </p>
+      </div>
+
+      <div className="rounded-xl border bg-white p-4 shadow-sm space-y-4">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="font-semibold">Encoding Period</h2>
+            <p className="text-sm text-gray-500">
+              Temporary date range control for submission and editing access.
+            </p>
+          </div>
+
+          <span
+            className={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-medium ${
+              windowOpen
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {windowOpen ? "Open" : "Closed"}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div>
+            <label className="mb-2 block text-sm font-medium">Start Date</label>
+            <input
+              type="date"
+              value={submissionWindow?.startDate || ""}
+              onChange={(e) =>
+                onUpdateSubmissionWindow((prev) => ({
+                  ...prev,
+                  startDate: e.target.value,
+                }))
+              }
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">End Date</label>
+            <input
+              type="date"
+              value={submissionWindow?.endDate || ""}
+              onChange={(e) =>
+                onUpdateSubmissionWindow((prev) => ({
+                  ...prev,
+                  endDate: e.target.value,
+                }))
+              }
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-5">

@@ -38,11 +38,31 @@ function getStatusClasses(status) {
   }
 }
 
-export default function MyEntries({ entries = [], onEditEntry }) {
+function isSubmissionWindowOpen(submissionWindow) {
+  const { startDate, endDate } = submissionWindow || {}
+
+  if (!startDate || !endDate) return false
+
+  const today = new Date()
+  const start = new Date(`${startDate}T00:00:00`)
+  const end = new Date(`${endDate}T23:59:59`)
+
+  return today >= start && today <= end
+}
+
+export default function MyEntries({
+  entries = [],
+  onEditEntry,
+  submissionWindow,
+}) {
   const [selectedEntry, setSelectedEntry] = useState(null)
   const navigate = useNavigate()
 
+  const windowOpen = isSubmissionWindowOpen(submissionWindow)
+
   const handleEdit = (entry) => {
+    if (!windowOpen) return
+
     onEditEntry(entry)
     setSelectedEntry(null)
     navigate("/submit")
@@ -56,6 +76,15 @@ export default function MyEntries({ entries = [], onEditEntry }) {
           View your submitted AWPB entries and their current status.
         </p>
       </div>
+
+      {!windowOpen && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <p className="font-medium text-red-900">Encoding period is closed</p>
+          <p className="text-sm text-red-800">
+            Returned entries cannot be edited until the submission window opens again.
+          </p>
+        </div>
+      )}
 
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         {entries.length === 0 ? (
@@ -112,9 +141,14 @@ export default function MyEntries({ entries = [], onEditEntry }) {
                         <button
                           type="button"
                           onClick={() => handleEdit(entry)}
-                          className="text-amber-700 hover:underline"
+                          disabled={!windowOpen}
+                          className={`${
+                            windowOpen
+                              ? "text-amber-700 hover:underline"
+                              : "cursor-not-allowed text-gray-400"
+                          }`}
                         >
-                          Edit
+                          {windowOpen ? "Edit" : "Locked"}
                         </button>
                       )}
                     </div>

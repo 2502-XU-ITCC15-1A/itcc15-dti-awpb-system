@@ -12,6 +12,11 @@ function App() {
   const [currentRole, setCurrentRole] = useState("encoder")
   const [entryBeingEdited, setEntryBeingEdited] = useState(null)
 
+  const [submissionWindow, setSubmissionWindow] = useState({
+    startDate: "2026-04-01",
+    endDate: "2026-04-30",
+  })
+
   const handleAddEntry = (newEntry) => {
     setEntries((prev) => [newEntry, ...prev])
   }
@@ -41,7 +46,9 @@ function App() {
 
   const navItems = useMemo(() => {
     if (currentRole === "admin") {
-      return [{ to: "/admin/review", label: "Admin Review", icon: "review" }]
+      return [
+        { to: "/admin/review", label: "Admin Review", icon: "review" },
+      ]
     }
 
     return [
@@ -67,7 +74,10 @@ function App() {
           path="/"
           element={
             currentRole === "encoder" ? (
-              <Home entries={entries} />
+              <Home
+                entries={entries}
+                submissionWindow={submissionWindow}
+              />
             ) : (
               <Navigate to="/admin/review" replace />
             )
@@ -81,6 +91,7 @@ function App() {
               <MyEntries
                 entries={entries}
                 onEditEntry={handleStartEdit}
+                submissionWindow={submissionWindow}
               />
             ) : (
               <Navigate to="/admin/review" replace />
@@ -97,6 +108,7 @@ function App() {
                 entryToEdit={entryBeingEdited}
                 onSaveEditedEntry={handleSaveEditedEntry}
                 clearEditingEntry={clearEditingEntry}
+                submissionWindow={submissionWindow}
               />
             ) : (
               <Navigate to="/admin/review" replace />
@@ -111,6 +123,8 @@ function App() {
               <AdminReview
                 entries={entries}
                 onUpdateEntry={handleUpdateEntry}
+                submissionWindow={submissionWindow}
+                onUpdateSubmissionWindow={setSubmissionWindow}
               />
             ) : (
               <Navigate to="/" replace />

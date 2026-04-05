@@ -109,11 +109,25 @@ function buildFormValuesFromEntry(entry) {
   }
 }
 
+
+function isSubmissionWindowOpen(submissionWindow) {
+  const { startDate, endDate } = submissionWindow || {}
+
+  if (!startDate || !endDate) return false
+
+  const today = new Date()
+  const start = new Date(`${startDate}T00:00:00`)
+  const end = new Date(`${endDate}T23:59:59`)
+
+  return today >= start && today <= end
+}
+
 export default function SubmitEntry({
   onAddEntry,
   entryToEdit,
   onSaveEditedEntry,
   clearEditingEntry,
+  submissionWindow,
 }) {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
@@ -135,6 +149,8 @@ export default function SubmitEntry({
   const planningYears = ["2026", "2027", "2028"]
   const isEditingReturnedEntry =
     entryToEdit && entryToEdit.status === "Returned"
+
+  const windowOpen = isSubmissionWindowOpen(submissionWindow)
 
   const planningYear = watch("planningYear")
   const unit = watch("unit")
@@ -448,6 +464,11 @@ export default function SubmitEntry({
   }
 
   const onSubmit = (data) => {
+    if (!windowOpen) {
+      alert("The encoding period is closed. You cannot submit or resubmit entries right now.")
+      return
+    }
+
     const hasAtLeastOneTarget = monthlyRows.some((row) => row.target > 0)
 
     if (!hasAtLeastOneTarget) {
@@ -544,6 +565,15 @@ export default function SubmitEntry({
         </p>
       </div>
 
+      {!windowOpen && (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <h2 className="mb-1 font-medium text-red-900">Encoding period is closed</h2>
+          <p className="text-sm text-red-800">
+            New submissions and returned-entry edits are currently locked.
+          </p>
+        </div>
+      )}
+
       {isEditingReturnedEntry && entryToEdit?.adminComment && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
           <h2 className="mb-2 font-medium text-amber-900">Revision Note</h2>
@@ -562,13 +592,12 @@ export default function SubmitEntry({
                 key={item.number}
                 type="button"
                 onClick={() => handleStepClick(item.number)}
-                className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${
-                  isActive
-                    ? "border-black bg-black text-white"
-                    : isDone
+                className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${isActive
+                  ? "border-black bg-black text-white"
+                  : isDone
                     ? "border-gray-300 bg-gray-100 text-gray-800 hover:bg-gray-200"
                     : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-                }`}
+                  }`}
               >
                 Step {item.number}: {item.label}
               </button>
@@ -1123,7 +1152,11 @@ export default function SubmitEntry({
 
                 <button
                   type="submit"
-                  className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                  disabled={!windowOpen}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium ${windowOpen
+                    ? "bg-black text-white hover:opacity-90"
+                    : "cursor-not-allowed bg-gray-300 text-gray-600"
+                    }`}
                 >
                   {isEditingReturnedEntry ? "Resubmit Entry" : "Submit to My Entries"}
                 </button>
