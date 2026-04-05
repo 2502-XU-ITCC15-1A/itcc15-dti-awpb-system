@@ -22,6 +22,16 @@ function formatDate(value) {
   })
 }
 
+function formatDateOnly(value) {
+  if (!value) return "N/A"
+
+  return new Date(value).toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })
+}
+
 function getStatusClasses(status) {
   switch (status) {
     case "Pending Review":
@@ -53,7 +63,6 @@ export default function AdminReview({
   entries = [],
   onUpdateEntry,
   submissionWindow,
-  onUpdateSubmissionWindow,
 }) {
   const [selectedEntry, setSelectedEntry] = useState(null)
 
@@ -114,12 +123,29 @@ export default function AdminReview({
         </p>
       </div>
 
-      <div className="rounded-xl border bg-white p-4 shadow-sm space-y-4">
+      <div
+        className={`rounded-xl border p-4 ${
+          windowOpen
+            ? "border-green-200 bg-green-50"
+            : "border-red-200 bg-red-50"
+        }`}
+      >
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="font-semibold">Encoding Period</h2>
-            <p className="text-sm text-gray-500">
-              Temporary date range control for submission and editing access.
+            <h2
+              className={`font-semibold ${
+                windowOpen ? "text-green-900" : "text-red-900"
+              }`}
+            >
+              Encoding Period {windowOpen ? "Open" : "Closed"}
+            </h2>
+            <p
+              className={`text-sm ${
+                windowOpen ? "text-green-800" : "text-red-800"
+              }`}
+            >
+              {formatDateOnly(submissionWindow?.startDate)} to{" "}
+              {formatDateOnly(submissionWindow?.endDate)}
             </p>
           </div>
 
@@ -132,38 +158,6 @@ export default function AdminReview({
           >
             {windowOpen ? "Open" : "Closed"}
           </span>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium">Start Date</label>
-            <input
-              type="date"
-              value={submissionWindow?.startDate || ""}
-              onChange={(e) =>
-                onUpdateSubmissionWindow((prev) => ({
-                  ...prev,
-                  startDate: e.target.value,
-                }))
-              }
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">End Date</label>
-            <input
-              type="date"
-              value={submissionWindow?.endDate || ""}
-              onChange={(e) =>
-                onUpdateSubmissionWindow((prev) => ({
-                  ...prev,
-                  endDate: e.target.value,
-                }))
-              }
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-            />
-          </div>
         </div>
       </div>
 

@@ -6,6 +6,7 @@ import Home from "./pages/Home"
 import MyEntries from "./pages/MyEntries"
 import SubmitEntry from "./pages/SubmitEntry"
 import AdminReview from "./pages/AdminReview"
+import AdminDashboard from "./pages/AdminDashboard"
 
 function App() {
   const [entries, setEntries] = useState([])
@@ -47,6 +48,7 @@ function App() {
   const navItems = useMemo(() => {
     if (currentRole === "admin") {
       return [
+        { to: "/admin/dashboard", label: "Dashboard", icon: "dashboard" },
         { to: "/admin/review", label: "Admin Review", icon: "review" },
       ]
     }
@@ -79,7 +81,7 @@ function App() {
                 submissionWindow={submissionWindow}
               />
             ) : (
-              <Navigate to="/admin/review" replace />
+              <Navigate to="/admin/dashboard" replace />
             )
           }
         />
@@ -94,7 +96,7 @@ function App() {
                 submissionWindow={submissionWindow}
               />
             ) : (
-              <Navigate to="/admin/review" replace />
+              <Navigate to="/admin/dashboard" replace />
             )
           }
         />
@@ -111,7 +113,22 @@ function App() {
                 submissionWindow={submissionWindow}
               />
             ) : (
-              <Navigate to="/admin/review" replace />
+              <Navigate to="/admin/dashboard" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/admin/dashboard"
+          element={
+            currentRole === "admin" ? (
+              <AdminDashboard
+                entries={entries}
+                submissionWindow={submissionWindow}
+                onUpdateSubmissionWindow={setSubmissionWindow}
+              />
+            ) : (
+              <Navigate to="/" replace />
             )
           }
         />
@@ -124,7 +141,6 @@ function App() {
                 entries={entries}
                 onUpdateEntry={handleUpdateEntry}
                 submissionWindow={submissionWindow}
-                onUpdateSubmissionWindow={setSubmissionWindow}
               />
             ) : (
               <Navigate to="/" replace />
