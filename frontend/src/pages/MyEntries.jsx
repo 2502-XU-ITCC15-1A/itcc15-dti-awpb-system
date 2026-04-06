@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import EntryDetailsModal from "../components/entries/EntryDetailsModal"
 
@@ -56,9 +56,38 @@ export default function MyEntries({
   submissionWindow,
 }) {
   const [selectedEntry, setSelectedEntry] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("All")
+  const [yearFilter, setYearFilter] = useState("All")
   const navigate = useNavigate()
 
   const windowOpen = isSubmissionWindowOpen(submissionWindow)
+
+  const availableYears = useMemo(() => {
+    return [...new Set(entries.map((entry) => entry.planningYear).filter(Boolean))]
+      .sort((a, b) => String(b).localeCompare(String(a)))
+  }, [entries])
+
+  const filteredEntries = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+
+    return entries.filter((entry) => {
+      const matchesSearch =
+        normalizedSearch === "" ||
+        entry.titleOfActivities?.toLowerCase().includes(normalizedSearch) ||
+        entry.performanceIndicator?.toLowerCase().includes(normalizedSearch) ||
+        entry.subActivity?.toLowerCase().includes(normalizedSearch) ||
+        entry.unit?.toLowerCase().includes(normalizedSearch)
+
+      const matchesStatus =
+        statusFilter === "All" || entry.status === statusFilter
+
+      const matchesYear =
+        yearFilter === "All" || String(entry.planningYear) === yearFilter
+
+      return matchesSearch && matchesStatus && matchesYear
+    })
+  }, [entries, searchTerm, statusFilter, yearFilter])
 
   const handleEdit = (entry) => {
     if (!windowOpen) return
@@ -66,6 +95,12 @@ export default function MyEntries({
     onEditEntry(entry)
     setSelectedEntry(null)
     navigate("/submit")
+  }
+
+  const clearFilters = () => {
+    setSearchTerm("")
+    setStatusFilter("All")
+    setYearFilter("All")
   }
 
   return (
@@ -86,10 +121,77 @@ export default function MyEntries({
         </div>
       )}
 
+      <div className="rounded-xl border bg-white p-4 shadow-sm space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold">Search and Filter</h2>
+          <p className="text-sm text-gray-500">
+            Find entries by title, status, or planning year.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="md:col-span-2">
+            <label className="mb-2 block text-sm font-medium">Search</label>
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search title, indicator, sub activity, or unit"
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+            >
+              <option value="All">All</option>
+              <option value="Pending Review">Pending Review</option>
+              <option value="Returned">Returned</option>
+              <option value="Rejected">Rejected</option>
+              <option value="Approved">Approved</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium">Planning Year</label>
+            <select
+              value={yearFilter}
+              onChange={(e) => setYearFilter(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+            >
+              <option value="All">All</option>
+              {availableYears.map((year) => (
+                <option key={year} value={String(year)}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-gray-500">
+            Showing {filteredEntries.length} of {entries.length} entries
+          </p>
+
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+          >
+            Reset Filters
+          </button>
+        </div>
+      </div>
+
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-        {entries.length === 0 ? (
+        {filteredEntries.length === 0 ? (
           <div className="p-6 text-sm text-gray-500">
-            No entries submitted yet.
+            No entries match the current filters.
           </div>
         ) : (
           <table className="w-full text-sm">
@@ -97,6 +199,7 @@ export default function MyEntries({
               <tr>
                 <th className="p-3">Title</th>
                 <th className="p-3">Unit</th>
+                <th className="p-3">Year</th>
                 <th className="p-3">Submitted</th>
                 <th className="p-3">Status</th>
                 <th className="p-3 text-right">Total</th>
@@ -105,7 +208,7 @@ export default function MyEntries({
             </thead>
 
             <tbody>
-              {entries.map((entry) => (
+              {filteredEntries.map((entry) => (
                 <tr key={entry.id} className="border-t">
                   <td className="p-3">
                     <p className="font-medium">{entry.titleOfActivities}</p>
@@ -114,6 +217,7 @@ export default function MyEntries({
                     </p>
                   </td>
                   <td className="p-3">{entry.unit}</td>
+                  <td className="p-3">{entry.planningYear || "N/A"}</td>
                   <td className="p-3">{formatDate(entry.submittedAt)}</td>
                   <td className="p-3">
                     <span
