@@ -65,6 +65,10 @@ export default function AdminReview({
   submissionWindow,
 }) {
   const [selectedEntry, setSelectedEntry] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("All")
+  const [unitFilter, setUnitFilter] = useState("All")
+  const [yearFilter, setYearFilter] = useState("All")
 
   const windowOpen = isSubmissionWindowOpen(submissionWindow)
 
@@ -77,6 +81,39 @@ export default function AdminReview({
       approved: entries.filter((entry) => entry.status === "Approved").length,
     }
   }, [entries])
+
+  const availableUnits = useMemo(() => {
+    return [...new Set(entries.map((entry) => entry.unit).filter(Boolean))].sort()
+  }, [entries])
+
+  const availableYears = useMemo(() => {
+    return [...new Set(entries.map((entry) => entry.planningYear).filter(Boolean))]
+      .sort((a, b) => String(b).localeCompare(String(a)))
+  }, [entries])
+
+  const filteredEntries = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase()
+
+    return entries.filter((entry) => {
+      const matchesSearch =
+        normalizedSearch === "" ||
+        entry.titleOfActivities?.toLowerCase().includes(normalizedSearch) ||
+        entry.performanceIndicator?.toLowerCase().includes(normalizedSearch) ||
+        entry.subActivity?.toLowerCase().includes(normalizedSearch) ||
+        entry.unit?.toLowerCase().includes(normalizedSearch)
+
+      const matchesStatus =
+        statusFilter === "All" || entry.status === statusFilter
+
+      const matchesUnit =
+        unitFilter === "All" || entry.unit === unitFilter
+
+      const matchesYear =
+        yearFilter === "All" || String(entry.planningYear) === yearFilter
+
+      return matchesSearch && matchesStatus && matchesUnit && matchesYear
+    })
+  }, [entries, searchTerm, statusFilter, unitFilter, yearFilter])
 
   const handleApprove = (note) => {
     if (!selectedEntry) return
@@ -114,6 +151,13 @@ export default function AdminReview({
     setSelectedEntry(null)
   }
 
+  const clearFilters = () => {
+    setSearchTerm("")
+    setStatusFilter("All")
+    setUnitFilter("All")
+    setYearFilter("All")
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -124,25 +168,22 @@ export default function AdminReview({
       </div>
 
       <div
-        className={`rounded-xl border p-4 ${
-          windowOpen
+        className={`rounded-xl border p-4 ${windowOpen
             ? "border-green-200 bg-green-50"
             : "border-red-200 bg-red-50"
-        }`}
+          }`}
       >
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <h2
-              className={`font-semibold ${
-                windowOpen ? "text-green-900" : "text-red-900"
-              }`}
+              className={`font-semibold ${windowOpen ? "text-green-900" : "text-red-900"
+                }`}
             >
               Encoding Period {windowOpen ? "Open" : "Closed"}
             </h2>
             <p
-              className={`text-sm ${
-                windowOpen ? "text-green-800" : "text-red-800"
-              }`}
+              className={`text-sm ${windowOpen ? "text-green-800" : "text-red-800"
+                }`}
             >
               {formatDateOnly(submissionWindow?.startDate)} to{" "}
               {formatDateOnly(submissionWindow?.endDate)}
@@ -150,11 +191,10 @@ export default function AdminReview({
           </div>
 
           <span
-            className={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-medium ${
-              windowOpen
+            className={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-medium ${windowOpen
                 ? "bg-green-100 text-green-700"
                 : "bg-red-100 text-red-700"
-            }`}
+              }`}
           >
             {windowOpen ? "Open" : "Closed"}
           </span>
@@ -189,59 +229,150 @@ export default function AdminReview({
       </div>
 
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-        {entries.length === 0 ? (
+        <div className="border-b p-4 space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">All Submitted Entries</h2>
+              <p className="text-sm text-gray-500">
+                Search and filter submissions for review.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search title, sub activity, or unit"
+                className="min-w-[300px] rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+              />
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                <option value="All">All Status</option>
+                <option value="Pending Review">Pending Review</option>
+                <option value="Returned">Returned</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Approved">Approved</option>
+              </select>
+
+              <select
+                value={unitFilter}
+                onChange={(e) => setUnitFilter(e.target.value)}
+                className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                <option value="All">All Units</option>
+                {availableUnits.map((unit) => (
+                  <option key={unit} value={unit}>
+                    {unit}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={yearFilter}
+                onChange={(e) => setYearFilter(e.target.value)}
+                className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                <option value="All">All Years</option>
+                {availableYears.map((year) => (
+                  <option key={year} value={String(year)}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <p className="text-sm text-gray-500">
+            Showing {filteredEntries.length} of {entries.length} entries
+          </p>
+        </div>
+
+        {filteredEntries.length === 0 ? (
           <div className="p-6 text-sm text-gray-500">
-            No submitted entries yet.
+            No entries match the current filters.
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-left">
-              <tr>
-                <th className="p-3">Title</th>
-                <th className="p-3">Unit</th>
-                <th className="p-3">Submitted</th>
-                <th className="p-3">Status</th>
-                <th className="p-3 text-right">Total</th>
-                <th className="p-3 text-right">Action</th>
-              </tr>
-            </thead>
+          <div className="overflow-x-auto">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-[34%]" />
+                <col className="w-[10%]" />
+                <col className="w-[10%]" />
+                <col className="w-[18%]" />
+                <col className="w-[12%]" />
+                <col className="w-[10%]" />
+                <col className="w-[6%]" />
+              </colgroup>
 
-            <tbody>
-              {entries.map((entry) => (
-                <tr key={entry.id} className="border-t">
-                  <td className="p-3">
-                    <p className="font-medium">{entry.titleOfActivities}</p>
-                    <p className="text-xs text-gray-500">
-                      No. {entry.no} | {entry.performanceIndicator}
-                    </p>
-                  </td>
-                  <td className="p-3">{entry.unit}</td>
-                  <td className="p-3">{formatDate(entry.submittedAt)}</td>
-                  <td className="p-3">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusClasses(
-                        entry.status
-                      )}`}
-                    >
-                      {entry.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-right font-medium">
-                    {formatCurrency(entry.grandTotal)}
-                  </td>
-                  <td className="p-3 text-right">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedEntry(entry)}
-                      className="text-blue-600 hover:underline"
-                    >
-                      Review
-                    </button>
-                  </td>
+              <thead className="bg-gray-100 text-left">
+                <tr>
+                  <th className="p-3">Title</th>
+                  <th className="p-3">Unit</th>
+                  <th className="p-3">Year</th>
+                  <th className="p-3">Submitted</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3 text-right">Total</th>
+                  <th className="p-3 text-right">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {filteredEntries.map((entry) => (
+                  <tr key={entry.id} className="border-t">
+                    <td className="p-3">
+                      <p
+                        className="truncate font-medium"
+                        title={entry.titleOfActivities}
+                      >
+                        {entry.titleOfActivities}
+                      </p>
+                    </td>
+
+                    <td className="p-3">{entry.unit}</td>
+                    <td className="p-3">{entry.planningYear || "N/A"}</td>
+                    <td className="p-3">{formatDate(entry.submittedAt)}</td>
+
+                    <td className="p-3">
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusClasses(
+                          entry.status
+                        )}`}
+                      >
+                        {entry.status}
+                      </span>
+                    </td>
+
+                    <td className="p-3 text-right font-medium">
+                      {formatCurrency(entry.grandTotal)}
+                    </td>
+
+                    <td className="p-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedEntry(entry)}
+                        className="text-blue-600 hover:underline"
+                      >
+                        Review
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 

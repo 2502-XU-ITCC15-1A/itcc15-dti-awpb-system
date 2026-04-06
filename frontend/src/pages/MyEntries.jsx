@@ -121,146 +121,154 @@ export default function MyEntries({
         </div>
       )}
 
-      <div className="rounded-xl border bg-white p-4 shadow-sm space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold">Search and Filter</h2>
-          <p className="text-sm text-gray-500">
-            Find entries by title, status, or planning year.
-          </p>
-        </div>
+      <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+        <div className="border-b p-4 space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">All Submitted Entries</h2>
+              <p className="text-sm text-gray-500">
+                Search and filter your submitted AWPB entries.
+              </p>
+            </div>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-medium">Search</label>
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search title, indicator, sub activity, or unit"
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-            />
+            <div className="flex flex-wrap gap-2">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search title, sub activity, or unit"
+                className="min-w-[300px] rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+              />
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                <option value="All">All Status</option>
+                <option value="Pending Review">Pending Review</option>
+                <option value="Returned">Returned</option>
+                <option value="Rejected">Rejected</option>
+                <option value="Approved">Approved</option>
+              </select>
+
+              <select
+                value={yearFilter}
+                onChange={(e) => setYearFilter(e.target.value)}
+                className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+              >
+                <option value="All">All Years</option>
+                {availableYears.map((year) => (
+                  <option key={year} value={String(year)}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
+              >
+                Reset
+              </button>
+            </div>
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium">Status</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-            >
-              <option value="All">All</option>
-              <option value="Pending Review">Pending Review</option>
-              <option value="Returned">Returned</option>
-              <option value="Rejected">Rejected</option>
-              <option value="Approved">Approved</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">Planning Year</label>
-            <select
-              value={yearFilter}
-              onChange={(e) => setYearFilter(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-            >
-              <option value="All">All</option>
-              {availableYears.map((year) => (
-                <option key={year} value={String(year)}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-gray-500">
             Showing {filteredEntries.length} of {entries.length} entries
           </p>
-
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
-          >
-            Reset Filters
-          </button>
         </div>
-      </div>
 
-      <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
         {filteredEntries.length === 0 ? (
           <div className="p-6 text-sm text-gray-500">
             No entries match the current filters.
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-left">
-              <tr>
-                <th className="p-3">Title</th>
-                <th className="p-3">Unit</th>
-                <th className="p-3">Year</th>
-                <th className="p-3">Submitted</th>
-                <th className="p-3">Status</th>
-                <th className="p-3 text-right">Total</th>
-                <th className="p-3 text-right">Action</th>
-              </tr>
-            </thead>
+          <div className="overflow-x-auto">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                <col className="w-[34%]" />
+                <col className="w-[10%]" />
+                <col className="w-[10%]" />
+                <col className="w-[18%]" />
+                <col className="w-[12%]" />
+                <col className="w-[10%]" />
+                <col className="w-[6%]" />
+              </colgroup>
 
-            <tbody>
-              {filteredEntries.map((entry) => (
-                <tr key={entry.id} className="border-t">
-                  <td className="p-3">
-                    <p className="font-medium">{entry.titleOfActivities}</p>
-                    <p className="text-xs text-gray-500">
-                      No. {entry.no} | {entry.performanceIndicator}
-                    </p>
-                  </td>
-                  <td className="p-3">{entry.unit}</td>
-                  <td className="p-3">{entry.planningYear || "N/A"}</td>
-                  <td className="p-3">{formatDate(entry.submittedAt)}</td>
-                  <td className="p-3">
-                    <span
-                      className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusClasses(
-                        entry.status
-                      )}`}
-                    >
-                      {entry.status}
-                    </span>
-                  </td>
-                  <td className="p-3 text-right font-medium">
-                    {formatCurrency(entry.grandTotal)}
-                  </td>
-                  <td className="p-3 text-right">
-                    <div className="flex justify-end gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setSelectedEntry(entry)}
-                        className="text-blue-600 hover:underline"
+              <thead className="bg-gray-100 text-left">
+                <tr>
+                  <th className="p-3">Title</th>
+                  <th className="p-3">Unit</th>
+                  <th className="p-3">Year</th>
+                  <th className="p-3">Submitted</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3 text-right">Total</th>
+                  <th className="p-3 text-right">Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredEntries.map((entry) => (
+                  <tr key={entry.id} className="border-t">
+                    <td className="p-3">
+                      <p
+                        className="truncate font-medium"
+                        title={entry.titleOfActivities}
                       >
-                        View
-                      </button>
+                        {entry.titleOfActivities}
+                      </p>
+                    </td>
 
-                      {entry.status === "Returned" && (
+                    <td className="p-3">{entry.unit}</td>
+                    <td className="p-3">{entry.planningYear || "N/A"}</td>
+                    <td className="p-3">{formatDate(entry.submittedAt)}</td>
+
+                    <td className="p-3">
+                      <span
+                        className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusClasses(
+                          entry.status
+                        )}`}
+                      >
+                        {entry.status}
+                      </span>
+                    </td>
+
+                    <td className="p-3 text-right font-medium">
+                      {formatCurrency(entry.grandTotal)}
+                    </td>
+
+                    <td className="p-3 text-right">
+                      <div className="flex justify-end gap-3">
                         <button
                           type="button"
-                          onClick={() => handleEdit(entry)}
-                          disabled={!windowOpen}
-                          className={`${
-                            windowOpen
-                              ? "text-amber-700 hover:underline"
-                              : "cursor-not-allowed text-gray-400"
-                          }`}
+                          onClick={() => setSelectedEntry(entry)}
+                          className="text-blue-600 hover:underline"
                         >
-                          {windowOpen ? "Edit" : "Locked"}
+                          View
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+
+                        {entry.status === "Returned" && (
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(entry)}
+                            disabled={!windowOpen}
+                            className={`${windowOpen
+                                ? "text-amber-700 hover:underline"
+                                : "cursor-not-allowed text-gray-400"
+                              }`}
+                          >
+                            {windowOpen ? "Edit" : "Locked"}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
