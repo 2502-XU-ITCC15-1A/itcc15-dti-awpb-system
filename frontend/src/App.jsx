@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { Navigate, Route, Routes } from "react-router-dom"
 import AppLayout from "./components/layout/AppLayout"
 
+import Login from "./pages/Login"
 import Home from "./pages/Home"
 import MyEntries from "./pages/MyEntries"
 import SubmitEntry from "./pages/SubmitEntry"
@@ -10,13 +11,26 @@ import AdminDashboard from "./pages/AdminDashboard"
 
 function App() {
   const [entries, setEntries] = useState([])
-  const [currentRole, setCurrentRole] = useState("encoder")
   const [entryBeingEdited, setEntryBeingEdited] = useState(null)
 
   const [submissionWindow, setSubmissionWindow] = useState({
     startDate: "2026-04-01",
     endDate: "2026-04-30",
   })
+
+  const [authUser, setAuthUser] = useState(null)
+
+  const isAuthenticated = Boolean(authUser)
+  const currentRole = authUser?.role || null
+
+  const handleLogin = (user) => {
+    setAuthUser(user)
+  }
+
+  const handleLogout = () => {
+    setAuthUser(null)
+    setEntryBeingEdited(null)
+  }
 
   const handleAddEntry = (newEntry) => {
     setEntries((prev) => [newEntry, ...prev])
@@ -60,16 +74,16 @@ function App() {
     ]
   }, [currentRole])
 
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />
+  }
+
   return (
     <AppLayout
       navItems={navItems}
       currentRole={currentRole}
-      onRoleChange={(role) => {
-        setCurrentRole(role)
-        if (role === "admin") {
-          setEntryBeingEdited(null)
-        }
-      }}
+      currentUser={authUser}
+      onLogout={handleLogout}
     >
       <Routes>
         <Route
