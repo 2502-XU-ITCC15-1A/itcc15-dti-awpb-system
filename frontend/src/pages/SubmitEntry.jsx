@@ -350,7 +350,7 @@ export default function SubmitEntry({
       "performanceIndicator",
       selectedNoEntry?.performanceIndicator || "",
       {
-        shouldValidate: true,
+        shouldValidate: false,
         shouldDirty: false,
       }
     )
@@ -848,6 +848,8 @@ export default function SubmitEntry({
                   </label>
                   <input
                     type="text"
+                    placeholder="Will auto-fill after selecting No."
+                    disabled={!selectedNo}
                     readOnly
                     {...register("performanceIndicator", {
                       required: "Performance Indicator is required",
