@@ -6,6 +6,7 @@ import {
   ClipboardCheck,
   LogOut,
   User,
+  Users,
 } from "lucide-react"
 
 const iconMap = {
@@ -13,6 +14,7 @@ const iconMap = {
   entries: FileText,
   submit: PlusCircle,
   review: ClipboardCheck,
+  accounts: Users,
 }
 
 export default function AppLayout({

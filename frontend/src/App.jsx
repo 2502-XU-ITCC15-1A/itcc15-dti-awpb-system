@@ -1,81 +1,87 @@
-import { useMemo, useState } from "react"
-import { Navigate, Route, Routes } from "react-router-dom"
-import AppLayout from "./components/layout/AppLayout"
+import { useMemo, useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import AppLayout from "./components/layout/AppLayout";
 
-import Login from "./pages/Login"
-import Home from "./pages/Home"
-import MyEntries from "./pages/MyEntries"
-import SubmitEntry from "./pages/SubmitEntry"
-import AdminReview from "./pages/AdminReview"
-import AdminDashboard from "./pages/AdminDashboard"
+import Login from "./pages/Login";
+import Home from "./pages/Home";
+import MyEntries from "./pages/MyEntries";
+import SubmitEntry from "./pages/SubmitEntry";
+import AdminReview from "./pages/AdminReview";
+import AdminDashboard from "./pages/AdminDashboard";
+import ManageAccounts from "./pages/ManageAccounts";
 
 function App() {
-  const [entries, setEntries] = useState([])
-  const [entryBeingEdited, setEntryBeingEdited] = useState(null)
+  const [entries, setEntries] = useState([]);
+  const [entryBeingEdited, setEntryBeingEdited] = useState(null);
 
   const [submissionWindow, setSubmissionWindow] = useState({
     startDate: "2026-04-01",
     endDate: "2026-04-30",
-  })
+  });
 
-  const [authUser, setAuthUser] = useState(null)
+  const [authUser, setAuthUser] = useState(null);
 
-  const isAuthenticated = Boolean(authUser)
-  const currentRole = authUser?.role || null
+  const isAuthenticated = Boolean(authUser);
+  const currentRole = authUser?.role || null;
 
   const handleLogin = (user) => {
-    setAuthUser(user)
-  }
+    setAuthUser(user);
+  };
 
   const handleLogout = () => {
-    setAuthUser(null)
-    setEntryBeingEdited(null)
-  }
+    setAuthUser(null);
+    setEntryBeingEdited(null);
+  };
 
   const handleAddEntry = (newEntry) => {
-    setEntries((prev) => [newEntry, ...prev])
-  }
+    setEntries((prev) => [newEntry, ...prev]);
+  };
 
   const handleUpdateEntry = (entryId, updates) => {
     setEntries((prev) =>
       prev.map((entry) =>
-        entry.id === entryId ? { ...entry, ...updates } : entry
-      )
-    )
-  }
+        entry.id === entryId ? { ...entry, ...updates } : entry,
+      ),
+    );
+  };
 
   const handleStartEdit = (entry) => {
-    setEntryBeingEdited(entry)
-  }
+    setEntryBeingEdited(entry);
+  };
 
   const handleSaveEditedEntry = (entryId, updatedEntry) => {
     setEntries((prev) =>
-      prev.map((entry) => (entry.id === entryId ? updatedEntry : entry))
-    )
-    setEntryBeingEdited(null)
-  }
+      prev.map((entry) => (entry.id === entryId ? updatedEntry : entry)),
+    );
+    setEntryBeingEdited(null);
+  };
 
   const clearEditingEntry = () => {
-    setEntryBeingEdited(null)
-  }
+    setEntryBeingEdited(null);
+  };
 
   const navItems = useMemo(() => {
     if (currentRole === "admin") {
       return [
         { to: "/admin/dashboard", label: "Dashboard", icon: "dashboard" },
         { to: "/admin/review", label: "Admin Review", icon: "review" },
-      ]
+        {
+          to: "/admin/manage-accounts",
+          label: "Manage Accounts",
+          icon: "accounts",
+        },
+      ];
     }
 
     return [
       { to: "/", label: "Home", icon: "dashboard" },
       { to: "/entries", label: "My Entries", icon: "entries" },
       { to: "/submit", label: "Submit Entry", icon: "submit" },
-    ]
-  }, [currentRole])
+    ];
+  }, [currentRole]);
 
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />
+    return <Login onLogin={handleLogin} />;
   }
 
   return (
@@ -90,10 +96,7 @@ function App() {
           path="/"
           element={
             currentRole === "encoder" ? (
-              <Home
-                entries={entries}
-                submissionWindow={submissionWindow}
-              />
+              <Home entries={entries} submissionWindow={submissionWindow} />
             ) : (
               <Navigate to="/admin/dashboard" replace />
             )
@@ -161,9 +164,20 @@ function App() {
             )
           }
         />
+
+        <Route
+          path="/admin/manage-accounts"
+          element={
+            currentRole === "admin" ? (
+              <ManageAccounts />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
       </Routes>
     </AppLayout>
-  )
+  );
 }
 
-export default App
+export default App;
