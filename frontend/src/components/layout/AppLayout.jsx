@@ -1,5 +1,5 @@
-import { NavLink } from "react-router-dom"
-import logo from "../../assets/logo.png"
+import { useState } from "react"
+import { NavLink, useLocation } from "react-router-dom"
 import {
   LayoutDashboard,
   FileText,
@@ -8,6 +8,9 @@ import {
   LogOut,
   User,
   Users,
+  UserPlus,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react"
 
 const iconMap = {
@@ -16,6 +19,7 @@ const iconMap = {
   submit: PlusCircle,
   review: ClipboardCheck,
   accounts: Users,
+  addAccount: UserPlus,
 }
 
 export default function AppLayout({
@@ -25,15 +29,32 @@ export default function AppLayout({
   currentUser,
   onLogout,
 }) {
+  const location = useLocation()
+  const [openMenus, setOpenMenus] = useState({
+    "Manage Accounts": true,
+  })
+
+  const toggleMenu = (label) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [label]: !prev[label],
+    }))
+  }
+
+  const isSubItemActive = (subItems = []) => {
+    return subItems.some((subItem) => location.pathname === subItem.to)
+  }
+
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-[#0b4f52] to-[#08393b] text-white">
       <aside className="flex w-[290px] flex-col px-7 py-8">
         <div>
           <div className="mb-10">
             <div className="px-1">
-              <div className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 bg-[#edf4f3] w-auto">
-              <img src={logo} alt="DTI RAPID Growth Logo" className="h-17 w-auto object-contain"></img>
-              </div>
+              <p className="text-2xl font-bold tracking-wide">DTI RAPID</p>
+              <p className="text-sm uppercase tracking-[0.22em] text-white/70">
+                Growth Project
+              </p>
             </div>
           </div>
 
@@ -48,15 +69,60 @@ export default function AppLayout({
             {navItems.map((item) => {
               const Icon = iconMap[item.icon]
 
+              if (item.subItems) {
+                const isOpen = openMenus[item.label]
+                const hasActiveChild = isSubItemActive(item.subItems)
+
+                return (
+                  <div key={item.label} className="space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => toggleMenu(item.label)}
+                      className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition ${hasActiveChild
+                          ? "bg-white/15 text-white"
+                          : "text-white/85 hover:bg-white/10 hover:text-white"
+                        }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        {Icon ? <Icon size={18} /> : null}
+                        {item.label}
+                      </span>
+
+                      {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </button>
+
+                    {isOpen && (
+                      <div className="ml-4 space-y-2">
+                        {item.subItems.map((subItem) => (
+                          <NavLink
+                            end={subItem.to === "/admin/manage-accounts"}
+                            key={subItem.to}
+                            to={subItem.to}
+                            className={({ isActive }) =>
+                              `flex items-center gap-3 rounded-xl px-4 py-2 text-sm transition ${isActive
+                                ? "bg-white/15 text-white"
+                                : "text-white/75 hover:bg-white/10 hover:text-white"
+                              }`
+                            }
+                          >
+                            <UserPlus size={16} />
+                            <span>{subItem.label}</span>
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              }
+
               return (
                 <NavLink
                   key={item.to}
                   to={item.to}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
-                      isActive
-                        ? "bg-white/15 text-white"
-                        : "text-white/85 hover:bg-white/10 hover:text-white"
+                    `flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${isActive
+                      ? "bg-white/15 text-white"
+                      : "text-white/85 hover:bg-white/10 hover:text-white"
                     }`
                   }
                 >

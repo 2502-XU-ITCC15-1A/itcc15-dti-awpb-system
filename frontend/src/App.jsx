@@ -9,6 +9,7 @@ import SubmitEntry from "./pages/SubmitEntry";
 import AdminReview from "./pages/AdminReview";
 import AdminDashboard from "./pages/AdminDashboard";
 import ManageAccounts from "./pages/ManageAccounts";
+import AddNewAccount from "./pages/AddNewAccount";
 
 function App() {
   const [entries, setEntries] = useState([]);
@@ -66,19 +67,22 @@ function App() {
         { to: "/admin/dashboard", label: "Dashboard", icon: "dashboard" },
         { to: "/admin/review", label: "Admin Review", icon: "review" },
         {
-          to: "/admin/manage-accounts",
           label: "Manage Accounts",
           icon: "accounts",
+          subItems: [
+            { to: "/admin/manage-accounts", label: "All Accounts" },
+            { to: "/admin/manage-accounts/new", label: "Add New Account" },
+          ],
         },
-      ];
+      ]
     }
 
     return [
       { to: "/", label: "Home", icon: "dashboard" },
       { to: "/entries", label: "My Entries", icon: "entries" },
       { to: "/submit", label: "Submit Entry", icon: "submit" },
-    ];
-  }, [currentRole]);
+    ]
+  }, [currentRole])
 
   if (!isAuthenticated) {
     return <Login onLogin={handleLogin} />;
@@ -175,6 +179,19 @@ function App() {
             )
           }
         />
+
+        <Route
+          path="/admin/manage-accounts/new"
+          element={
+            currentRole === "admin" ? (
+              <AddNewAccount />
+            ) : (
+              <Navigate to="/" replace />
+            )
+          }
+        />
+
+
       </Routes>
     </AppLayout>
   );
