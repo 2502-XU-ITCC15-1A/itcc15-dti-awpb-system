@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom"
+import logo from "../../assets/logo.png"
 import {
   LayoutDashboard,
   FileText,
@@ -30,10 +31,9 @@ export default function AppLayout({
         <div>
           <div className="mb-10">
             <div className="px-1">
-              <p className="text-2xl font-bold tracking-wide">DTI RAPID</p>
-              <p className="text-sm uppercase tracking-[0.22em] text-white/70">
-                Growth Project
-              </p>
+              <div className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 bg-[#edf4f3] w-auto">
+              <img src={logo} alt="DTI RAPID Growth Logo" className="h-17 w-auto object-contain"></img>
+              </div>
             </div>
           </div>
 
