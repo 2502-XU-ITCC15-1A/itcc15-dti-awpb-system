@@ -1,6 +1,20 @@
 import { useMemo, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { Search } from "lucide-react"
+
 import EntryDetailsModal from "../components/entries/EntryDetailsModal"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("en-PH", {
@@ -23,18 +37,18 @@ function formatDate(value) {
   })
 }
 
-function getStatusClasses(status) {
+function getStatusBadgeVariant(status) {
   switch (status) {
     case "Pending Review":
-      return "bg-yellow-100 text-yellow-700"
+      return "secondary"
     case "Returned":
-      return "bg-red-100 text-red-700"
-    case "Rejected":
-      return "bg-gray-200 text-gray-700"
+      return "destructive"
     case "Approved":
-      return "bg-green-100 text-green-700"
+      return "default"
+    case "Rejected":
+      return "outline"
     default:
-      return "bg-gray-100 text-gray-700"
+      return "outline"
   }
 }
 
@@ -57,8 +71,8 @@ export default function MyEntries({
 }) {
   const [selectedEntry, setSelectedEntry] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("All")
-  const [yearFilter, setYearFilter] = useState("All")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [yearFilter, setYearFilter] = useState("all")
   const navigate = useNavigate()
 
   const windowOpen = isSubmissionWindowOpen(submissionWindow)
@@ -80,10 +94,10 @@ export default function MyEntries({
         entry.unit?.toLowerCase().includes(normalizedSearch)
 
       const matchesStatus =
-        statusFilter === "All" || entry.status === statusFilter
+        statusFilter === "all" || entry.status === statusFilter
 
       const matchesYear =
-        yearFilter === "All" || String(entry.planningYear) === yearFilter
+        yearFilter === "all" || String(entry.planningYear) === yearFilter
 
       return matchesSearch && matchesStatus && matchesYear
     })
@@ -99,178 +113,188 @@ export default function MyEntries({
 
   const clearFilters = () => {
     setSearchTerm("")
-    setStatusFilter("All")
-    setYearFilter("All")
+    setStatusFilter("all")
+    setYearFilter("all")
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">My Entries</h1>
-        <p className="text-sm text-gray-500">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          My Entries
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
           View your submitted AWPB entries and their current status.
         </p>
       </div>
 
       {!windowOpen && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <p className="font-medium text-red-900">Encoding period is closed</p>
-          <p className="text-sm text-red-800">
-            Returned entries cannot be edited until the submission window opens again.
-          </p>
-        </div>
+        <Card className="border-red-200 bg-red-50 shadow-sm">
+          <CardContent className="p-5">
+            <p className="font-medium text-red-900">Encoding period is closed</p>
+            <p className="mt-1 text-sm text-red-800">
+              Returned entries cannot be edited until the submission window opens again.
+            </p>
+          </CardContent>
+        </Card>
       )}
 
-      <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-        <div className="border-b p-4 space-y-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+      <Card className="overflow-hidden border-slate-200 shadow-sm">
+        <CardHeader className="border-b bg-white">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">All Submitted Entries</h2>
-              <p className="text-sm text-gray-500">
+              <CardTitle className="text-2xl">All Submitted Entries</CardTitle>
+              <p className="mt-1 text-sm text-slate-500">
                 Search and filter your submitted AWPB entries.
+              </p>
+              <p className="mt-3 text-sm text-slate-500">
+                Showing {filteredEntries.length} of {entries.length} entries
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search title, sub activity, or unit"
-                className="min-w-[300px] rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-              />
+            <div className="flex flex-wrap gap-2 xl:justify-end">
+              <div className="relative min-w-[300px]">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search title, sub activity, or unit"
+                  className="pl-9"
+                />
+              </div>
 
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-              >
-                <option value="All">All Status</option>
-                <option value="Pending Review">Pending Review</option>
-                <option value="Returned">Returned</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Approved">Approved</option>
-              </select>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Pending Review">Pending Review</SelectItem>
+                  <SelectItem value="Returned">Returned</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                  <SelectItem value="Approved">Approved</SelectItem>
+                </SelectContent>
+              </Select>
 
-              <select
-                value={yearFilter}
-                onChange={(e) => setYearFilter(e.target.value)}
-                className="rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
-              >
-                <option value="All">All Years</option>
-                {availableYears.map((year) => (
-                  <option key={year} value={String(year)}>
-                    {year}
-                  </option>
-                ))}
-              </select>
+              <Select value={yearFilter} onValueChange={setYearFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="All Years" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {availableYears.map((year) => (
+                    <SelectItem key={year} value={String(year)}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
-              >
+              <Button variant="outline" onClick={clearFilters}>
                 Reset
-              </button>
+              </Button>
             </div>
           </div>
+        </CardHeader>
 
-          <p className="text-sm text-gray-500">
-            Showing {filteredEntries.length} of {entries.length} entries
-          </p>
-        </div>
+        <CardContent className="p-0">
+          {filteredEntries.length === 0 ? (
+            <div className="p-6 text-sm text-slate-500">
+              No entries match the current filters.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full table-fixed text-sm">
+                <colgroup>
+                  <col className="w-[30%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[7%]" />
+                </colgroup>
 
-        {filteredEntries.length === 0 ? (
-          <div className="p-6 text-sm text-gray-500">
-            No entries match the current filters.
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full table-fixed text-sm">
-              <colgroup>
-                <col className="w-[34%]" />
-                <col className="w-[10%]" />
-                <col className="w-[10%]" />
-                <col className="w-[18%]" />
-                <col className="w-[12%]" />
-                <col className="w-[10%]" />
-                <col className="w-[6%]" />
-              </colgroup>
+                <thead className="bg-slate-50 text-left">
+                  <tr className="border-b">
+                    <th className="px-4 py-3 font-semibold text-slate-700">Title</th>
+                    <th className="px-4 py-3 font-semibold text-slate-700">Unit</th>
+                    <th className="px-4 py-3 font-semibold text-slate-700">Year</th>
+                    <th className="px-4 py-3 font-semibold text-slate-700">Submitted</th>
+                    <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
+                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                      Total
+                    </th>
+                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
 
-              <thead className="bg-gray-100 text-left">
-                <tr>
-                  <th className="p-3">Title</th>
-                  <th className="p-3">Unit</th>
-                  <th className="p-3">Year</th>
-                  <th className="p-3">Submitted</th>
-                  <th className="p-3">Status</th>
-                  <th className="p-3 text-right">Total</th>
-                  <th className="p-3 text-right">Action</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {filteredEntries.map((entry) => (
-                  <tr key={entry.id} className="border-t">
-                    <td className="p-3">
-                      <p
-                        className="truncate font-medium"
-                        title={entry.titleOfActivities}
-                      >
-                        {entry.titleOfActivities}
-                      </p>
-                    </td>
-
-                    <td className="p-3">{entry.unit}</td>
-                    <td className="p-3">{entry.planningYear || "N/A"}</td>
-                    <td className="p-3">{formatDate(entry.submittedAt)}</td>
-
-                    <td className="p-3">
-                      <span
-                        className={`rounded-full px-2 py-1 text-xs font-medium ${getStatusClasses(
-                          entry.status
-                        )}`}
-                      >
-                        {entry.status}
-                      </span>
-                    </td>
-
-                    <td className="p-3 text-right font-medium">
-                      {formatCurrency(entry.grandTotal)}
-                    </td>
-
-                    <td className="p-3 text-right">
-                      <div className="flex justify-end gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedEntry(entry)}
-                          className="text-blue-600 hover:underline"
+                <tbody>
+                  {filteredEntries.map((entry) => (
+                    <tr key={entry.id} className="border-b last:border-b-0">
+                      <td className="px-4 py-4">
+                        <p
+                          className="truncate font-medium text-slate-900"
+                          title={entry.titleOfActivities}
                         >
-                          View
-                        </button>
+                          {entry.titleOfActivities}
+                        </p>
+                      </td>
 
-                        {entry.status === "Returned" && (
+                      <td className="px-4 py-4 text-slate-700">{entry.unit}</td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {entry.planningYear || "N/A"}
+                      </td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {formatDate(entry.submittedAt)}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <Badge variant={getStatusBadgeVariant(entry.status)}>
+                          {entry.status}
+                        </Badge>
+                      </td>
+
+                      <td className="px-4 py-4 text-right font-medium text-slate-900">
+                        {formatCurrency(entry.grandTotal)}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <div className="flex justify-end gap-3">
                           <button
                             type="button"
-                            onClick={() => handleEdit(entry)}
-                            disabled={!windowOpen}
-                            className={`${windowOpen
-                                ? "text-amber-700 hover:underline"
-                                : "cursor-not-allowed text-gray-400"
-                              }`}
+                            onClick={() => setSelectedEntry(entry)}
+                            className="text-sm font-medium text-blue-600 hover:underline"
                           >
-                            {windowOpen ? "Edit" : "Locked"}
+                            View
                           </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+
+                          {entry.status === "Returned" && (
+                            <button
+                              type="button"
+                              onClick={() => handleEdit(entry)}
+                              disabled={!windowOpen}
+                              className={`text-sm font-medium ${
+                                windowOpen
+                                  ? "text-amber-700 hover:underline"
+                                  : "cursor-not-allowed text-slate-400"
+                              }`}
+                            >
+                              {windowOpen ? "Edit" : "Locked"}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <EntryDetailsModal
         entry={selectedEntry}

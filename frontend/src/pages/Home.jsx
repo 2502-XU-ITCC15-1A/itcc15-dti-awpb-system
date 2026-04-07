@@ -166,7 +166,7 @@ export default function Home({ entries = [], submissionWindow }) {
           </p>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mt-3">
           <Button asChild>
             <Link to="/submit">Add New Entry</Link>
           </Button>
