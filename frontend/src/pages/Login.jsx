@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
+import logo from "../assets/logo.png"
 
 export default function Login({ onLogin }) {
     const [showPassword, setShowPassword] = useState(false)
@@ -36,11 +37,11 @@ export default function Login({ onLogin }) {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-[#014b4c] via-[#0a5d60] to-[#4f9597] px-6 py-8">
-            <div className="w-full max-w-[540px] rounded-[2rem] bg-white px-8 py-10 shadow-xl md:px-12 md:py-12">
+            <div className="w-full max-w-[600px] rounded-[2rem] bg-white px-8 py-10 shadow-xl md:px-12 md:py-12">
                 <div className="mb-8 text-center">
                     <div className="mb-5 flex justify-center">
                         <div className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700">
-                            DTI RAPID Growth
+                            <img src={logo} alt="DTI RAPID Growth Logo" className="h-20 w-auto object-contain"></img>
                         </div>
                     </div>
 
