@@ -1,20 +1,20 @@
-import { useMemo, useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { Search } from "lucide-react"
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, Eye, Pencil, Lock } from "lucide-react";
 
-import EntryDetailsModal from "../components/entries/EntryDetailsModal"
+import EntryDetailsModal from "../components/entries/EntryDetailsModal";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("en-PH", {
@@ -22,11 +22,11 @@ function formatCurrency(value) {
     currency: "PHP",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value || 0)
+  }).format(value || 0);
 }
 
 function formatDate(value) {
-  if (!value) return "N/A"
+  if (!value) return "N/A";
 
   return new Date(value).toLocaleString("en-PH", {
     year: "numeric",
@@ -34,35 +34,34 @@ function formatDate(value) {
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  })
+  });
 }
 
 function getStatusBadgeVariant(status) {
   switch (status) {
     case "Pending Review":
-      return "statusPending"
+      return "statusPending";
     case "Returned":
-      return "statusReturned"
+      return "statusReturned";
     case "Approved":
-      return "statusApproved"
+      return "statusApproved";
     case "Rejected":
-      return "statusRejected"
+      return "statusRejected";
     default:
-      return "outline"
+      return "outline";
   }
 }
 
-
 function isSubmissionWindowOpen(submissionWindow) {
-  const { startDate, endDate } = submissionWindow || {}
+  const { startDate, endDate } = submissionWindow || {};
 
-  if (!startDate || !endDate) return false
+  if (!startDate || !endDate) return false;
 
-  const today = new Date()
-  const start = new Date(`${startDate}T00:00:00`)
-  const end = new Date(`${endDate}T23:59:59`)
+  const today = new Date();
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T23:59:59`);
 
-  return today >= start && today <= end
+  return today >= start && today <= end;
 }
 
 export default function MyEntries({
@@ -70,21 +69,22 @@ export default function MyEntries({
   onEditEntry,
   submissionWindow,
 }) {
-  const [selectedEntry, setSelectedEntry] = useState(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all")
-  const [yearFilter, setYearFilter] = useState("all")
-  const navigate = useNavigate()
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [yearFilter, setYearFilter] = useState("all");
+  const navigate = useNavigate();
 
-  const windowOpen = isSubmissionWindowOpen(submissionWindow)
+  const windowOpen = isSubmissionWindowOpen(submissionWindow);
 
   const availableYears = useMemo(() => {
-    return [...new Set(entries.map((entry) => entry.planningYear).filter(Boolean))]
-      .sort((a, b) => String(b).localeCompare(String(a)))
-  }, [entries])
+    return [
+      ...new Set(entries.map((entry) => entry.planningYear).filter(Boolean)),
+    ].sort((a, b) => String(b).localeCompare(String(a)));
+  }, [entries]);
 
   const filteredEntries = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase()
+    const normalizedSearch = searchTerm.trim().toLowerCase();
 
     return entries.filter((entry) => {
       const matchesSearch =
@@ -92,31 +92,31 @@ export default function MyEntries({
         entry.titleOfActivities?.toLowerCase().includes(normalizedSearch) ||
         entry.performanceIndicator?.toLowerCase().includes(normalizedSearch) ||
         entry.subActivity?.toLowerCase().includes(normalizedSearch) ||
-        entry.unit?.toLowerCase().includes(normalizedSearch)
+        entry.unit?.toLowerCase().includes(normalizedSearch);
 
       const matchesStatus =
-        statusFilter === "all" || entry.status === statusFilter
+        statusFilter === "all" || entry.status === statusFilter;
 
       const matchesYear =
-        yearFilter === "all" || String(entry.planningYear) === yearFilter
+        yearFilter === "all" || String(entry.planningYear) === yearFilter;
 
-      return matchesSearch && matchesStatus && matchesYear
-    })
-  }, [entries, searchTerm, statusFilter, yearFilter])
+      return matchesSearch && matchesStatus && matchesYear;
+    });
+  }, [entries, searchTerm, statusFilter, yearFilter]);
 
   const handleEdit = (entry) => {
-    if (!windowOpen) return
+    if (!windowOpen) return;
 
-    onEditEntry(entry)
-    setSelectedEntry(null)
-    navigate("/submit")
-  }
+    onEditEntry(entry);
+    setSelectedEntry(null);
+    navigate("/submit");
+  };
 
   const clearFilters = () => {
-    setSearchTerm("")
-    setStatusFilter("all")
-    setYearFilter("all")
-  }
+    setSearchTerm("");
+    setStatusFilter("all");
+    setYearFilter("all");
+  };
 
   return (
     <div className="space-y-6">
@@ -132,9 +132,12 @@ export default function MyEntries({
       {!windowOpen && (
         <Card className="border-red-200 bg-red-50 shadow-sm">
           <CardContent className="p-5">
-            <p className="font-medium text-red-900">Encoding period is closed</p>
+            <p className="font-medium text-red-900">
+              Encoding period is closed
+            </p>
             <p className="mt-1 text-sm text-red-800">
-              Returned entries cannot be edited until the submission window opens again.
+              Returned entries cannot be edited until the submission window
+              opens again.
             </p>
           </CardContent>
         </Card>
@@ -218,15 +221,25 @@ export default function MyEntries({
 
                 <thead className="bg-slate-50 text-left">
                   <tr className="border-b">
-                    <th className="px-4 py-3 font-semibold text-slate-700">Title</th>
-                    <th className="px-4 py-3 font-semibold text-slate-700">Unit</th>
-                    <th className="px-4 py-3 font-semibold text-slate-700">Year</th>
-                    <th className="px-4 py-3 font-semibold text-slate-700">Submitted</th>
-                    <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
+                    <th className="px-4 py-3 font-semibold text-slate-700">
+                      Title
+                    </th>
+                    <th className="px-4 py-3 font-semibold text-slate-700">
+                      Unit
+                    </th>
+                    <th className="px-4 py-3 font-semibold text-slate-700">
+                      Year
+                    </th>
+                    <th className="px-4 py-3 font-semibold text-slate-700">
+                      Submitted
+                    </th>
+                    <th className="px-4 py-3 font-semibold text-slate-700">
+                      Status
+                    </th>
                     <th className="px-4 py-3 text-right font-semibold text-slate-700">
                       Total
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                    <th className="px-4 py-3 text-centered font-semibold text-slate-700">
                       Action
                     </th>
                   </tr>
@@ -262,29 +275,45 @@ export default function MyEntries({
                         {formatCurrency(entry.grandTotal)}
                       </td>
 
-                      <td className="px-4 py-4">
-                        <div className="flex justify-end gap-3">
-                          <button
+                      <td className="px-4 py-4 align-middle">
+                        <div className="flex items-center justify-center gap-1px">
+                          <Button
                             type="button"
+                            variant="ghost"
+                            size="icon-sm"
                             onClick={() => setSelectedEntry(entry)}
-                            className="text-sm font-medium text-blue-600 hover:underline"
+                            title="View details"
+                            aria-label="View details"
+                            className="text-blue-600 hover:text-blue-700"
                           >
-                            View
-                          </button>
+                            <Eye />
+                          </Button>
 
                           {entry.status === "Returned" && (
-                            <button
+                            <Button
                               type="button"
+                              variant="ghost"
+                              size="icon-sm"
                               onClick={() => handleEdit(entry)}
                               disabled={!windowOpen}
-                              className={`text-sm font-medium ${
+                              title={
                                 windowOpen
-                                  ? "text-amber-700 hover:underline"
-                                  : "cursor-not-allowed text-slate-400"
-                              }`}
+                                  ? "Edit returned entry"
+                                  : "Editing is locked"
+                              }
+                              aria-label={
+                                windowOpen
+                                  ? "Edit returned entry"
+                                  : "Editing is locked"
+                              }
+                              className={
+                                windowOpen
+                                  ? "text-amber-700 hover:text-amber-800"
+                                  : "text-slate-400"
+                              }
                             >
-                              {windowOpen ? "Edit" : "Locked"}
-                            </button>
+                              {windowOpen ? <Pencil /> : <Lock />}
+                            </Button>
                           )}
                         </div>
                       </td>
@@ -302,5 +331,5 @@ export default function MyEntries({
         onClose={() => setSelectedEntry(null)}
       />
     </div>
-  )
+  );
 }
