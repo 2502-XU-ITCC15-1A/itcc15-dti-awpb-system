@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react"
-import { useForm, useWatch } from "react-hook-form"
-import { useNavigate } from "react-router-dom"
-import awpbTree from "../data/awpb_dropdown_tree.json"
+import { useEffect, useMemo, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import awpbTree from "../data/awpb_dropdown_tree.json";
 
-const FALLBACK_VALUE = "N/A"
+const FALLBACK_VALUE = "N/A";
 
 const MONTHS = [
   { key: "jan", label: "Jan" },
@@ -18,7 +18,7 @@ const MONTHS = [
   { key: "oct", label: "Oct" },
   { key: "nov", label: "Nov" },
   { key: "dec", label: "Dec" },
-]
+];
 
 const defaultFormValues = {
   planningYear: "2026",
@@ -46,13 +46,15 @@ const defaultFormValues = {
     nov: "",
     dec: "",
   },
-}
+};
 
 function findOtherOperatingPath(componentNode) {
-  if (!componentNode || typeof componentNode !== "object") return null
+  if (!componentNode || typeof componentNode !== "object") return null;
 
-  for (const [subComponentKey, keyActivities] of Object.entries(componentNode)) {
-    if (!keyActivities || typeof keyActivities !== "object") continue
+  for (const [subComponentKey, keyActivities] of Object.entries(
+    componentNode,
+  )) {
+    if (!keyActivities || typeof keyActivities !== "object") continue;
 
     for (const keyActivityKey of Object.keys(keyActivities)) {
       if (
@@ -63,18 +65,18 @@ function findOtherOperatingPath(componentNode) {
         return {
           subComponentKey,
           keyActivityKey,
-        }
+        };
       }
     }
   }
 
-  return null
+  return null;
 }
 
 function toNumber(value) {
-  if (value === "" || value === null || value === undefined) return 0
-  const parsed = Number(value)
-  return Number.isNaN(parsed) ? 0 : parsed
+  if (value === "" || value === null || value === undefined) return 0;
+  const parsed = Number(value);
+  return Number.isNaN(parsed) ? 0 : parsed;
 }
 
 function formatCurrency(value) {
@@ -83,15 +85,17 @@ function formatCurrency(value) {
     currency: "PHP",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value || 0)
+  }).format(value || 0);
 }
 
 function buildFormValuesFromEntry(entry) {
   const targets = MONTHS.reduce((acc, month) => {
-    const found = entry.monthlyBreakdown?.find((row) => row.month === month.label)
-    acc[month.key] = found ? found.target : ""
-    return acc
-  }, {})
+    const found = entry.monthlyBreakdown?.find(
+      (row) => row.month === month.label,
+    );
+    acc[month.key] = found ? found.target : "";
+    return acc;
+  }, {});
 
   return {
     planningYear: entry.planningYear || "2026",
@@ -106,20 +110,19 @@ function buildFormValuesFromEntry(entry) {
     titleOfActivities: entry.titleOfActivities || "",
     unitCost: entry.unitCost ?? "",
     targets,
-  }
+  };
 }
 
-
 function isSubmissionWindowOpen(submissionWindow) {
-  const { startDate, endDate } = submissionWindow || {}
+  const { startDate, endDate } = submissionWindow || {};
 
-  if (!startDate || !endDate) return false
+  if (!startDate || !endDate) return false;
 
-  const today = new Date()
-  const start = new Date(`${startDate}T00:00:00`)
-  const end = new Date(`${endDate}T23:59:59`)
+  const today = new Date();
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T23:59:59`);
 
-  return today >= start && today <= end
+  return today >= start && today <= end;
 }
 
 export default function SubmitEntry({
@@ -129,8 +132,8 @@ export default function SubmitEntry({
   clearEditingEntry,
   submissionWindow,
 }) {
-  const navigate = useNavigate()
-  const [step, setStep] = useState(1)
+  const navigate = useNavigate();
+  const [step, setStep] = useState(1);
 
   const {
     control,
@@ -144,182 +147,183 @@ export default function SubmitEntry({
     formState: { errors },
   } = useForm({
     defaultValues: defaultFormValues,
-  })
+  });
 
-  const planningYears = ["2026", "2027", "2028"]
+  const planningYears = ["2026", "2027", "2028"];
   const isEditingReturnedEntry =
-    entryToEdit && entryToEdit.status === "Returned"
+    entryToEdit && entryToEdit.status === "Returned";
 
-  const windowOpen = isSubmissionWindowOpen(submissionWindow)
+  const windowOpen = isSubmissionWindowOpen(submissionWindow);
+  const formLocked = !windowOpen;
 
-  const planningYear = watch("planningYear")
-  const unit = watch("unit")
-  const component = watch("component")
-  const useOtherShortcut = watch("useOtherShortcut")
-  const subComponent = watch("subComponent")
-  const keyActivity = watch("keyActivity")
-  const selectedNo = watch("no")
-  const watchedSubActivity = watch("subActivity")
-  const titleOfActivities = watch("titleOfActivities")
+  const planningYear = watch("planningYear");
+  const unit = watch("unit");
+  const component = watch("component");
+  const useOtherShortcut = watch("useOtherShortcut");
+  const subComponent = watch("subComponent");
+  const keyActivity = watch("keyActivity");
+  const selectedNo = watch("no");
+  const watchedSubActivity = watch("subActivity");
+  const titleOfActivities = watch("titleOfActivities");
 
   const unitCost = useWatch({
     control,
     name: "unitCost",
-  })
+  });
 
-  const targets = useWatch({
-    control,
-    name: "targets",
-  }) || {}
+  const targets =
+    useWatch({
+      control,
+      name: "targets",
+    }) || {};
 
   const unitOptions = useMemo(() => {
-    return awpbTree.unitOptions.map((item) => item.value)
-  }, [])
+    return awpbTree.unitOptions.map((item) => item.value);
+  }, []);
 
   const componentOptions = useMemo(() => {
-    return Object.keys(awpbTree.hierarchy || {})
-  }, [])
+    return Object.keys(awpbTree.hierarchy || {});
+  }, []);
 
   const currentComponentNode = useMemo(() => {
-    return awpbTree.hierarchy?.[component] || null
-  }, [component])
+    return awpbTree.hierarchy?.[component] || null;
+  }, [component]);
 
   const otherShortcutPath = useMemo(() => {
-    return findOtherOperatingPath(currentComponentNode)
-  }, [currentComponentNode])
+    return findOtherOperatingPath(currentComponentNode);
+  }, [currentComponentNode]);
 
   const rawSubComponentKeys = useMemo(() => {
-    if (!component) return []
-    return Object.keys(currentComponentNode || {})
-  }, [component, currentComponentNode])
+    if (!component) return [];
+    return Object.keys(currentComponentNode || {});
+  }, [component, currentComponentNode]);
 
   const hasNoSubComponent =
-    rawSubComponentKeys.length === 1 && rawSubComponentKeys[0] === ""
+    rawSubComponentKeys.length === 1 && rawSubComponentKeys[0] === "";
 
   const visibleSubComponentOptions = useMemo(() => {
-    return rawSubComponentKeys.filter((key) => key !== "")
-  }, [rawSubComponentKeys])
+    return rawSubComponentKeys.filter((key) => key !== "");
+  }, [rawSubComponentKeys]);
 
-  const subComponentKey =
-    subComponent === FALLBACK_VALUE ? "" : subComponent
+  const subComponentKey = subComponent === FALLBACK_VALUE ? "" : subComponent;
 
   const keyActivityOptions = useMemo(() => {
-    if (!component) return []
+    if (!component) return [];
     return Object.keys(
-      awpbTree.hierarchy?.[component]?.[subComponentKey] || {}
-    )
-  }, [component, subComponentKey])
+      awpbTree.hierarchy?.[component]?.[subComponentKey] || {},
+    );
+  }, [component, subComponentKey]);
 
   const noOptions = useMemo(() => {
-    if (!component || !keyActivity) return []
+    if (!component || !keyActivity) return [];
     return (
       awpbTree.hierarchy?.[component]?.[subComponentKey]?.[keyActivity] || []
-    )
-  }, [component, subComponentKey, keyActivity])
+    );
+  }, [component, subComponentKey, keyActivity]);
 
   const selectedNoEntry = useMemo(() => {
-    return noOptions.find((item) => String(item.no) === String(selectedNo))
-  }, [noOptions, selectedNo])
+    return noOptions.find((item) => String(item.no) === String(selectedNo));
+  }, [noOptions, selectedNo]);
 
   const subActivityOptions = useMemo(() => {
-    return selectedNoEntry?.subActivities || []
-  }, [selectedNoEntry])
+    return selectedNoEntry?.subActivities || [];
+  }, [selectedNoEntry]);
 
   const hasNoSubActivity =
-    Boolean(selectedNo) && subActivityOptions.length === 0
+    Boolean(selectedNo) && subActivityOptions.length === 0;
 
   const monthlyRows = useMemo(() => {
-    const parsedUnitCost = toNumber(unitCost)
+    const parsedUnitCost = toNumber(unitCost);
 
     return MONTHS.map((month) => {
-      const target = toNumber(targets[month.key])
-      const amount = parsedUnitCost * target
+      const target = toNumber(targets[month.key]);
+      const amount = parsedUnitCost * target;
 
       return {
         ...month,
         target,
         amount,
-      }
-    })
-  }, [unitCost, targets])
+      };
+    });
+  }, [unitCost, targets]);
 
   const activeMonthlyRows = useMemo(() => {
-    return monthlyRows.filter((row) => row.target > 0)
-  }, [monthlyRows])
+    return monthlyRows.filter((row) => row.target > 0);
+  }, [monthlyRows]);
 
   const grandTotal = useMemo(() => {
-    return monthlyRows.reduce((sum, row) => sum + row.amount, 0)
-  }, [monthlyRows])
+    return monthlyRows.reduce((sum, row) => sum + row.amount, 0);
+  }, [monthlyRows]);
 
   useEffect(() => {
     if (entryToEdit && entryToEdit.status === "Returned") {
-      reset(buildFormValuesFromEntry(entryToEdit))
-      setStep(1)
+      reset(buildFormValuesFromEntry(entryToEdit));
+      setStep(1);
     }
-  }, [entryToEdit, reset])
+  }, [entryToEdit, reset]);
 
   useEffect(() => {
-    resetField("component")
-    resetField("useOtherShortcut")
-    resetField("subComponent")
-    resetField("keyActivity")
-    resetField("no")
-    resetField("performanceIndicator")
-    resetField("subActivity")
-  }, [unit, resetField])
+    resetField("component");
+    resetField("useOtherShortcut");
+    resetField("subComponent");
+    resetField("keyActivity");
+    resetField("no");
+    resetField("performanceIndicator");
+    resetField("subActivity");
+  }, [unit, resetField]);
 
   useEffect(() => {
-    resetField("useOtherShortcut")
-    resetField("subComponent")
-    resetField("keyActivity")
-    resetField("no")
-    resetField("performanceIndicator")
-    resetField("subActivity")
+    resetField("useOtherShortcut");
+    resetField("subComponent");
+    resetField("keyActivity");
+    resetField("no");
+    resetField("performanceIndicator");
+    resetField("subActivity");
 
     if (component && hasNoSubComponent) {
       setValue("subComponent", FALLBACK_VALUE, {
         shouldValidate: true,
         shouldDirty: false,
-      })
+      });
     }
-  }, [component, hasNoSubComponent, resetField, setValue])
+  }, [component, hasNoSubComponent, resetField, setValue]);
 
   useEffect(() => {
-    if (!component || !otherShortcutPath) return
+    if (!component || !otherShortcutPath) return;
 
     if (useOtherShortcut) {
       const targetSubComponent =
         otherShortcutPath.subComponentKey === ""
           ? FALLBACK_VALUE
-          : otherShortcutPath.subComponentKey
+          : otherShortcutPath.subComponentKey;
 
       setValue("subComponent", targetSubComponent, {
         shouldValidate: true,
         shouldDirty: true,
-      })
+      });
 
       setValue("keyActivity", otherShortcutPath.keyActivityKey, {
         shouldValidate: true,
         shouldDirty: true,
-      })
+      });
 
-      resetField("no")
-      resetField("performanceIndicator")
-      resetField("subActivity")
-      return
+      resetField("no");
+      resetField("performanceIndicator");
+      resetField("subActivity");
+      return;
     }
 
-    resetField("subComponent")
-    resetField("keyActivity")
-    resetField("no")
-    resetField("performanceIndicator")
-    resetField("subActivity")
+    resetField("subComponent");
+    resetField("keyActivity");
+    resetField("no");
+    resetField("performanceIndicator");
+    resetField("subActivity");
 
     if (hasNoSubComponent) {
       setValue("subComponent", FALLBACK_VALUE, {
         shouldValidate: true,
         shouldDirty: false,
-      })
+      });
     }
   }, [
     useOtherShortcut,
@@ -328,22 +332,22 @@ export default function SubmitEntry({
     hasNoSubComponent,
     resetField,
     setValue,
-  ])
+  ]);
 
   useEffect(() => {
-    if (useOtherShortcut) return
+    if (useOtherShortcut) return;
 
-    resetField("keyActivity")
-    resetField("no")
-    resetField("performanceIndicator")
-    resetField("subActivity")
-  }, [subComponent, useOtherShortcut, resetField])
+    resetField("keyActivity");
+    resetField("no");
+    resetField("performanceIndicator");
+    resetField("subActivity");
+  }, [subComponent, useOtherShortcut, resetField]);
 
   useEffect(() => {
-    resetField("no")
-    resetField("performanceIndicator")
-    resetField("subActivity")
-  }, [keyActivity, resetField])
+    resetField("no");
+    resetField("performanceIndicator");
+    resetField("subActivity");
+  }, [keyActivity, resetField]);
 
   useEffect(() => {
     setValue(
@@ -352,24 +356,24 @@ export default function SubmitEntry({
       {
         shouldValidate: false,
         shouldDirty: false,
-      }
-    )
+      },
+    );
 
     if (!selectedNo) {
-      resetField("subActivity")
-      return
+      resetField("subActivity");
+      return;
     }
 
     if (hasNoSubActivity) {
       setValue("subActivity", FALLBACK_VALUE, {
         shouldValidate: true,
         shouldDirty: false,
-      })
+      });
     } else if (watchedSubActivity === FALLBACK_VALUE) {
       setValue("subActivity", "", {
         shouldValidate: true,
         shouldDirty: false,
-      })
+      });
     }
   }, [
     selectedNo,
@@ -378,7 +382,7 @@ export default function SubmitEntry({
     watchedSubActivity,
     setValue,
     resetField,
-  ])
+  ]);
 
   const validateStep1 = async () => {
     return await trigger([
@@ -391,90 +395,95 @@ export default function SubmitEntry({
       "performanceIndicator",
       "subActivity",
       "titleOfActivities",
-    ])
-  }
+    ]);
+  };
 
   const validateStep2 = async () => {
-    const targetFieldNames = MONTHS.map((month) => `targets.${month.key}`)
+    const targetFieldNames = MONTHS.map((month) => `targets.${month.key}`);
 
-    const isValid = await trigger(["unitCost", ...targetFieldNames])
+    const isValid = await trigger(["unitCost", ...targetFieldNames]);
 
-    const hasAtLeastOneTarget = monthlyRows.some((row) => row.target > 0)
+    const hasAtLeastOneTarget = monthlyRows.some((row) => row.target > 0);
 
     if (!hasAtLeastOneTarget) {
-      alert("Please enter at least one monthly target before continuing.")
-      return false
+      alert("Please enter at least one monthly target before continuing.");
+      return false;
     }
 
-    return isValid
-  }
+    return isValid;
+  };
 
   const handleStepClick = async (targetStep) => {
-    if (targetStep === step) return
+    if (formLocked) return;
+    if (targetStep === step) return;
 
     if (targetStep === 1) {
-      setStep(1)
-      return
+      setStep(1);
+      return;
     }
 
     if (targetStep === 2) {
-      const step1Valid = await validateStep1()
+      const step1Valid = await validateStep1();
       if (step1Valid) {
-        setStep(2)
+        setStep(2);
       }
-      return
+      return;
     }
 
     if (targetStep === 3) {
-      const step1Valid = await validateStep1()
+      const step1Valid = await validateStep1();
 
       if (!step1Valid) {
-        setStep(1)
-        return
+        setStep(1);
+        return;
       }
 
-      const step2Valid = await validateStep2()
+      const step2Valid = await validateStep2();
 
       if (step2Valid) {
-        setStep(3)
+        setStep(3);
       } else {
-        setStep(2)
+        setStep(2);
       }
     }
-  }
+  };
 
   const goToStep1 = async () => {
-    setStep(1)
-  }
+    setStep(1);
+  };
 
   const goToStep2 = async () => {
-    const isValid = await validateStep1()
+    if (formLocked) return;
+    const isValid = await validateStep1();
 
     if (isValid) {
-      setStep(2)
+      setStep(2);
     }
-  }
+  };
 
   const goToStep3 = async () => {
-    const isValid = await validateStep2()
+    if (formLocked) return;
+    const isValid = await validateStep2();
 
     if (isValid) {
-      setStep(3)
+      setStep(3);
     }
-  }
+  };
 
   const onSubmit = (data) => {
     if (!windowOpen) {
-      alert("The encoding period is closed. You cannot submit or resubmit entries right now.")
-      return
+      alert(
+        "The encoding period is closed. You cannot submit or resubmit entries right now.",
+      );
+      return;
     }
 
-    const hasAtLeastOneTarget = monthlyRows.some((row) => row.target > 0)
+    const hasAtLeastOneTarget = monthlyRows.some((row) => row.target > 0);
 
     if (!hasAtLeastOneTarget) {
-      alert("Please enter at least one monthly target before submitting.")
-      setStep(2)
-      return
+      alert("Please enter at least one monthly target before submitting.");
+      setStep(2);
+      return;
     }
 
     if (isEditingReturnedEntry) {
@@ -500,14 +509,14 @@ export default function SubmitEntry({
         adminComment: "",
         reviewedAt: "",
         resubmittedAt: new Date().toISOString(),
-      }
+      };
 
-      onSaveEditedEntry(entryToEdit.id, updatedEntry)
-      reset(defaultFormValues)
-      setStep(1)
-      clearEditingEntry?.()
-      navigate("/entries")
-      return
+      onSaveEditedEntry(entryToEdit.id, updatedEntry);
+      reset(defaultFormValues);
+      setStep(1);
+      clearEditingEntry?.();
+      navigate("/entries");
+      return;
     }
 
     const newEntry = {
@@ -534,25 +543,25 @@ export default function SubmitEntry({
       status: "Pending Review",
       adminComment: "",
       submittedAt: new Date().toISOString(),
-    }
+    };
 
-    onAddEntry(newEntry)
-    reset(defaultFormValues)
-    setStep(1)
-    clearEditingEntry?.()
-    navigate("/entries")
-  }
+    onAddEntry(newEntry);
+    reset(defaultFormValues);
+    setStep(1);
+    clearEditingEntry?.();
+    navigate("/entries");
+  };
 
   const shortcutSubComponentLabel =
     otherShortcutPath?.subComponentKey === ""
       ? FALLBACK_VALUE
-      : otherShortcutPath?.subComponentKey || ""
+      : otherShortcutPath?.subComponentKey || "";
 
   const steps = [
     { number: 1, label: "Classification" },
     { number: 2, label: "Budget Computation" },
     { number: 3, label: "Review & Submit" },
-  ]
+  ];
 
   return (
     <div className="w-full space-y-6">
@@ -567,7 +576,9 @@ export default function SubmitEntry({
 
       {!windowOpen && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <h2 className="mb-1 font-medium text-red-900">Encoding period is closed</h2>
+          <h2 className="mb-1 font-medium text-red-900">
+            Encoding period is closed
+          </h2>
           <p className="text-sm text-red-800">
             New submissions and returned-entry edits are currently locked.
           </p>
@@ -584,28 +595,34 @@ export default function SubmitEntry({
       <div className="rounded-xl border bg-white p-6 shadow-sm">
         <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-3">
           {steps.map((item) => {
-            const isActive = step === item.number
-            const isDone = step > item.number
+            const isActive = step === item.number;
+            const isDone = step > item.number;
 
             return (
               <button
                 key={item.number}
                 type="button"
                 onClick={() => handleStepClick(item.number)}
-                className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${isActive
-                  ? "border-black bg-black text-white"
-                  : isDone
-                    ? "border-gray-300 bg-gray-100 text-gray-800 hover:bg-gray-200"
-                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
-                  }`}
+                disabled={formLocked}
+                className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${
+                  isActive
+                    ? "border-black bg-black text-white"
+                    : isDone
+                      ? "border-gray-300 bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                }`}
               >
                 Step {item.number}: {item.label}
               </button>
-            )
+            );
           })}
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+          <fieldset
+            disabled={formLocked}
+            className={formLocked ? "space-y-8 opacity-70" : "space-y-8"}
+          >
           {step === 1 && (
             <div className="space-y-6">
               <div>
@@ -701,7 +718,8 @@ export default function SubmitEntry({
                           Continue to Other Operating Cost
                         </p>
                         <p className="text-xs text-amber-800">
-                          This will automatically select the correct Other Operating Cost path.
+                          This will automatically select the correct Other
+                          Operating Cost path.
                         </p>
                       </div>
                     </label>
@@ -934,8 +952,8 @@ export default function SubmitEntry({
                   <button
                     type="button"
                     onClick={() => {
-                      clearEditingEntry?.()
-                      navigate("/entries")
+                      clearEditingEntry?.();
+                      navigate("/entries");
                     }}
                     className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
                   >
@@ -967,7 +985,8 @@ export default function SubmitEntry({
               <div>
                 <h2 className="text-lg font-semibold">Budget Computation</h2>
                 <p className="text-sm text-gray-500">
-                  Monthly amount is automatically computed as Unit Cost × Monthly Target.
+                  Monthly amount is automatically computed as Unit Cost ×
+                  Monthly Target.
                 </p>
               </div>
 
@@ -1002,8 +1021,12 @@ export default function SubmitEntry({
                   <thead className="bg-gray-100">
                     <tr>
                       <th className="px-4 py-3 text-left font-medium">Month</th>
-                      <th className="px-4 py-3 text-left font-medium">Target</th>
-                      <th className="px-4 py-3 text-left font-medium">Computed Amount</th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Target
+                      </th>
+                      <th className="px-4 py-3 text-left font-medium">
+                        Computed Amount
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1083,15 +1106,43 @@ export default function SubmitEntry({
                   <h3 className="mb-3 font-medium">Entry Details</h3>
 
                   <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Planning Year:</span> {planningYear || "N/A"}</p>
-                    <p><span className="font-medium">Unit:</span> {unit || "N/A"}</p>
-                    <p><span className="font-medium">Component:</span> {component || "N/A"}</p>
-                    <p><span className="font-medium">Sub component:</span> {subComponent || "N/A"}</p>
-                    <p><span className="font-medium">Key Activity:</span> {keyActivity || "N/A"}</p>
-                    <p><span className="font-medium">No.:</span> {selectedNo || "N/A"}</p>
-                    <p><span className="font-medium">Performance Indicator:</span> {selectedNoEntry?.performanceIndicator || "N/A"}</p>
-                    <p><span className="font-medium">Sub Activity:</span> {watchedSubActivity || "N/A"}</p>
-                    <p><span className="font-medium">Title of Activities:</span> {titleOfActivities || "N/A"}</p>
+                    <p>
+                      <span className="font-medium">Planning Year:</span>{" "}
+                      {planningYear || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Unit:</span> {unit || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Component:</span>{" "}
+                      {component || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Sub component:</span>{" "}
+                      {subComponent || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Key Activity:</span>{" "}
+                      {keyActivity || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">No.:</span>{" "}
+                      {selectedNo || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">
+                        Performance Indicator:
+                      </span>{" "}
+                      {selectedNoEntry?.performanceIndicator || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Sub Activity:</span>{" "}
+                      {watchedSubActivity || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Title of Activities:</span>{" "}
+                      {titleOfActivities || "N/A"}
+                    </p>
                   </div>
                 </div>
 
@@ -1099,21 +1150,29 @@ export default function SubmitEntry({
                   <h3 className="mb-3 font-medium">Budget Summary</h3>
 
                   <div className="space-y-2 text-sm">
-                    <p><span className="font-medium">Unit Cost:</span> {formatCurrency(toNumber(unitCost))}</p>
+                    <p>
+                      <span className="font-medium">Unit Cost:</span>{" "}
+                      {formatCurrency(toNumber(unitCost))}
+                    </p>
                     <p>
                       <span className="font-medium">Active Months:</span>{" "}
                       {activeMonthlyRows.length > 0
                         ? activeMonthlyRows.map((row) => row.label).join(", ")
                         : "None"}
                     </p>
-                    <p><span className="font-medium">Grand Total:</span> {formatCurrency(grandTotal)}</p>
+                    <p>
+                      <span className="font-medium">Grand Total:</span>{" "}
+                      {formatCurrency(grandTotal)}
+                    </p>
                   </div>
                 </div>
               </div>
 
               {activeMonthlyRows.length > 0 && (
                 <div className="rounded-xl border bg-white p-4">
-                  <h3 className="mb-3 font-medium">Monthly Breakdown Preview</h3>
+                  <h3 className="mb-3 font-medium">
+                    Monthly Breakdown Preview
+                  </h3>
 
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -1155,18 +1214,22 @@ export default function SubmitEntry({
                 <button
                   type="submit"
                   disabled={!windowOpen}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium ${windowOpen
-                    ? "bg-black text-white hover:opacity-90"
-                    : "cursor-not-allowed bg-gray-300 text-gray-600"
-                    }`}
+                  className={`rounded-lg px-4 py-2 text-sm font-medium ${
+                    windowOpen
+                      ? "bg-black text-white hover:opacity-90"
+                      : "cursor-not-allowed bg-gray-300 text-gray-600"
+                  }`}
                 >
-                  {isEditingReturnedEntry ? "Resubmit Entry" : "Submit to My Entries"}
+                  {isEditingReturnedEntry
+                    ? "Resubmit Entry"
+                    : "Submit to My Entries"}
                 </button>
               </div>
             </div>
           )}
+          </fieldset>
         </form>
       </div>
     </div>
-  )
+  );
 }
