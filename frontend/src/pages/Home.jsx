@@ -48,17 +48,18 @@ function formatDateOnly(value) {
 function getStatusBadgeVariant(status) {
   switch (status) {
     case "Pending Review":
-      return "secondary"
+      return "statusPending"
     case "Returned":
-      return "destructive"
+      return "statusReturned"
     case "Approved":
-      return "default"
+      return "statusApproved"
     case "Rejected":
-      return "outline"
+      return "statusRejected"
     default:
       return "outline"
   }
 }
+
 
 function isSubmissionWindowOpen(submissionWindow) {
   const { startDate, endDate } = submissionWindow || {}
