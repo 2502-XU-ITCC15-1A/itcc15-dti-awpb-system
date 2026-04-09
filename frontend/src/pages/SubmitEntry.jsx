@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import awpbTree from "../data/awpb_dropdown_tree.json";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 const FALLBACK_VALUE = "N/A";
 
@@ -615,13 +616,16 @@ export default function SubmitEntry({
       )}
 
       {isEditingReturnedEntry && entryToEdit?.adminComment && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <h2 className="mb-2 font-medium text-amber-900">Revision Note</h2>
-          <p className="text-sm text-amber-900">{entryToEdit.adminComment}</p>
-        </div>
+        <Card className="border-0 bg-amber-50 shadow-[0_8px_18px_rgba(15,23,42,0.08)]">
+          <CardContent className="p-4">
+            <h2 className="mb-2 font-medium text-amber-900">Revision Note</h2>
+            <p className="text-sm text-amber-900">{entryToEdit.adminComment}</p>
+          </CardContent>
+        </Card>
       )}
 
-      <div className="rounded-xl border bg-white p-6 shadow-sm">
+      <Card className="border-0 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
+        <CardContent className="p-6">
         <div className="mb-8 grid grid-cols-1 gap-3 md:grid-cols-3">
           {steps.map((item) => {
             const isActive = step === item.number;
@@ -633,12 +637,12 @@ export default function SubmitEntry({
                 type="button"
                 onClick={() => handleStepClick(item.number)}
                 disabled={formLocked}
-                className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${
+                className={`w-full rounded-lg px-4 py-3 text-left text-sm font-medium transition-none ${
                   isActive
-                    ? "border-black bg-black text-white"
+                    ? "border border-transparent bg-gradient-to-r from-[#1f2f74] to-[#2a4694] text-white"
                     : isDone
-                      ? "border-gray-300 bg-gray-100 text-gray-800 hover:bg-gray-200"
-                      : "border-gray-200 bg-white text-gray-500 hover:bg-gray-50"
+                      ? "border border-slate-300 bg-slate-100 text-slate-800"
+                      : "border border-slate-200 bg-white text-slate-500"
                 }`}
               >
                 Step {item.number}: {item.label}
@@ -978,33 +982,35 @@ export default function SubmitEntry({
 
               <div className="flex justify-end gap-3">
                 {isEditingReturnedEntry ? (
-                  <button
+                  <Button
                     type="button"
                     onClick={() => {
                       clearEditingEntry?.();
                       navigate("/entries");
                     }}
-                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                    variant="outline"
+                    className="px-4 text-[15px]"
                   >
                     Cancel Edit
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     type="button"
                     onClick={() => reset(defaultFormValues)}
-                    className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                    variant="outline"
+                    className="px-4 text-[15px]"
                   >
                     Clear Form
-                  </button>
+                  </Button>
                 )}
 
-                <button
+                <Button
                   type="button"
                   onClick={goToStep2}
-                  className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                  className="px-4 text-[15px] border-0 bg-gradient-to-r from-[#1f2f74] to-[#2a4694] text-white shadow-[0_6px_16px_rgba(31,47,116,0.28)] transition-all duration-200 hover:from-[#19265f] hover:to-[#213a80] hover:shadow-[0_10px_24px_rgba(31,47,116,0.38)]"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -1102,21 +1108,22 @@ export default function SubmitEntry({
               </div>
 
               <div className="flex justify-end gap-3">
-                <button
+                <Button
                   type="button"
                   onClick={goToStep1}
-                  className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                  variant="outline"
+                  className="px-4 text-[15px]"
                 >
                   Back
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="button"
                   onClick={goToStep3}
-                  className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                  className="px-4 text-[15px] border-0 bg-gradient-to-r from-[#1f2f74] to-[#2a4694] text-white shadow-[0_6px_16px_rgba(31,47,116,0.28)] transition-all duration-200 hover:from-[#19265f] hover:to-[#213a80] hover:shadow-[0_10px_24px_rgba(31,47,116,0.38)]"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -1232,33 +1239,35 @@ export default function SubmitEntry({
               )}
 
               <div className="flex justify-end gap-3">
-                <button
+                <Button
                   type="button"
                   onClick={() => setStep(2)}
-                  className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                  variant="outline"
+                  className="px-4 text-[15px]"
                 >
                   Back
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type="submit"
                   disabled={!windowOpen}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium ${
+                  className={`px-4 text-[15px] border-0 ${
                     windowOpen
-                      ? "bg-black text-white hover:opacity-90"
+                      ? "bg-gradient-to-r from-[#1f2f74] to-[#2a4694] text-white shadow-[0_6px_16px_rgba(31,47,116,0.28)] transition-all duration-200 hover:from-[#19265f] hover:to-[#213a80] hover:shadow-[0_10px_24px_rgba(31,47,116,0.38)]"
                       : "cursor-not-allowed bg-gray-300 text-gray-600"
                   }`}
                 >
                   {isEditingReturnedEntry
                     ? "Resubmit Entry"
                     : "Submit to My Entries"}
-                </button>
+                </Button>
               </div>
             </div>
           )}
           </fieldset>
         </form>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
