@@ -264,7 +264,7 @@ export default function MyEntries({
                     <th className="px-4 py-2.5 text-right font-semibold text-slate-700">
                       Total
                     </th>
-                    <th className="px-4 py-2.5 text-centered font-semibold text-slate-700">
+                    <th className="px-4 py-2.5 text-center font-semibold text-slate-700">
                       Action
                     </th>
                   </tr>
@@ -301,7 +301,7 @@ export default function MyEntries({
                       </td>
 
                       <td className="px-4 py-4 align-middle">
-                        <div className="flex items-center justify-center gap-1px">
+                        <div className="flex items-center justify-center gap-0.5">
                           <Button
                             type="button"
                             variant="ghost"

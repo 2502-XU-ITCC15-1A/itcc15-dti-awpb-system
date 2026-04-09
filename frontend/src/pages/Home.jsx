@@ -82,9 +82,8 @@ function StatCard({ title, value, icon: Icon, highlight = false }) {
       <CardContent className="flex items-start justify-between p-5">
         <div>
           <p
-            className={`text-sm ${
-              highlight ? "text-white/75" : "text-slate-500"
-            }`}
+            className={`text-sm ${highlight ? "text-white/75" : "text-slate-500"
+              }`}
           >
             {title}
           </p>
@@ -92,9 +91,8 @@ function StatCard({ title, value, icon: Icon, highlight = false }) {
         </div>
 
         <div
-          className={`rounded-2xl p-3 ${
-            highlight ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-          }`}
+          className={`rounded-2xl p-3 ${highlight ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+            }`}
         >
           <Icon size={20} />
         </div>
@@ -149,19 +147,19 @@ export default function Home({ entries = [], submissionWindow }) {
           <Button
             asChild
             variant="outline"
-            className="border-0 bg-white text-[#1f2f74] shadow-[0_3px_10px_rgba(15,23,42,0.08)] transition-all duration-200 hover:border-[#213a80] hover:bg-gradient-to-r hover:from-[#1f2f74] hover:to-[#2a4694] hover:text-white hover:shadow-[0_8px_20px_rgba(31,47,116,0.28)]"
+            className="border border-slate-200 bg-white text-slate-700 shadow-[0_3px_10px_rgba(15,23,42,0.08)] transition-all duration-200 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-800 hover:shadow-[0_6px_16px_rgba(15,23,42,0.10)]"
           >
             <Link to="/entries">Go to My Entries</Link>
           </Button>
+
         </div>
       </div>
 
       <Card
-        className={`border-0 shadow-[0_12px_28px_rgba(15,23,42,0.12)] ${
-          windowOpen
+        className={`border-0 shadow-[0_12px_28px_rgba(15,23,42,0.12)] ${windowOpen
             ? "border-0 bg-gradient-to-br from-[#6ea3a6] via-[#4f8f93] to-[#2f7f86]"
             : "border-0 bg-gradient-to-br from-[#f9d1d1] via-[#f5bcbc] to-[#ef9f9f]"
-        }`}
+          }`}
       >
         <CardContent className="p-4 md:p-5">
           <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
@@ -217,7 +215,7 @@ export default function Home({ entries = [], submissionWindow }) {
 
           <CardContent>
             {returnedEntries.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
+              <div className="rounded-2xl border border border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
                 No returned entries right now.
               </div>
             ) : (
@@ -257,7 +255,7 @@ export default function Home({ entries = [], submissionWindow }) {
 
             <CardContent className="flex-1">
               {recentEntries.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
+                <div className="rounded-2xl border border border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
                   <p className="text-sm text-slate-500">
                     No entries submitted yet.
                   </p>
