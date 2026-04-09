@@ -14,6 +14,7 @@ import AddNewAccount from "./pages/AddNewAccount";
 function App() {
   const [entries, setEntries] = useState([]);
   const [entryBeingEdited, setEntryBeingEdited] = useState(null);
+  const [submitEntryDraft, setSubmitEntryDraft] = useState(null);
 
   const [submissionWindow, setSubmissionWindow] = useState({
     startDate: "2026-04-01",
@@ -32,6 +33,7 @@ function App() {
   const handleLogout = () => {
     setAuthUser(null);
     setEntryBeingEdited(null);
+    setSubmitEntryDraft(null);
   };
 
   const handleAddEntry = (newEntry) => {
@@ -59,6 +61,10 @@ function App() {
 
   const clearEditingEntry = () => {
     setEntryBeingEdited(null);
+  };
+
+  const clearSubmitEntryDraft = () => {
+    setSubmitEntryDraft(null);
   };
 
   const navItems = useMemo(() => {
@@ -132,6 +138,9 @@ function App() {
                 onSaveEditedEntry={handleSaveEditedEntry}
                 clearEditingEntry={clearEditingEntry}
                 submissionWindow={submissionWindow}
+                draftState={submitEntryDraft}
+                onDraftChange={setSubmitEntryDraft}
+                onClearDraft={clearSubmitEntryDraft}
               />
             ) : (
               <Navigate to="/admin/dashboard" replace />

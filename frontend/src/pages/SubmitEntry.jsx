@@ -144,6 +144,9 @@ export default function SubmitEntry({
   onSaveEditedEntry,
   clearEditingEntry,
   submissionWindow,
+  draftState,
+  onDraftChange,
+  onClearDraft,
 }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -189,6 +192,10 @@ export default function SubmitEntry({
       control,
       name: "targets",
     }) || {};
+
+  const draftValues = useWatch({
+    control,
+  });
 
   const unitOptions = useMemo(() => {
     return awpbTree.unitOptions.map((item) => item.value);
@@ -270,10 +277,39 @@ export default function SubmitEntry({
 
   useEffect(() => {
     if (entryToEdit && entryToEdit.status === "Returned") {
-      reset(buildFormValuesFromEntry(entryToEdit));
-      setStep(1);
+      const shouldUseEditDraft =
+        draftState?.mode === "edit" && draftState?.entryId === entryToEdit.id;
+
+      const nextValues = shouldUseEditDraft
+        ? mergeWithDefaultFormValues(draftState?.values)
+        : buildFormValuesFromEntry(entryToEdit);
+
+      reset(nextValues);
+      setStep(shouldUseEditDraft ? draftState?.step || 1 : 1);
+      return;
     }
+
+    if (draftState?.mode === "new" && draftState?.values) {
+      reset(mergeWithDefaultFormValues(draftState.values));
+      setStep(draftState?.step || 1);
+      return;
+    }
+
+    reset(defaultFormValues);
+    setStep(1);
   }, [entryToEdit, reset]);
+
+  useEffect(() => {
+    if (!draftValues) return;
+
+    onDraftChange?.({
+      mode:
+        entryToEdit && entryToEdit.status === "Returned" ? "edit" : "new",
+      entryId: entryToEdit?.id || null,
+      step,
+      values: mergeWithDefaultFormValues(draftValues),
+    });
+  }, [draftValues, entryToEdit, onDraftChange, step]);
 
   useEffect(() => {
     resetField("component");
@@ -527,6 +563,7 @@ export default function SubmitEntry({
       onSaveEditedEntry(entryToEdit.id, updatedEntry);
       reset(defaultFormValues);
       setStep(1);
+      onClearDraft?.();
       clearEditingEntry?.();
       navigate("/entries");
       return;
@@ -561,6 +598,7 @@ export default function SubmitEntry({
     onAddEntry(newEntry);
     reset(defaultFormValues);
     setStep(1);
+    onClearDraft?.();
     clearEditingEntry?.();
     navigate("/entries");
   };
@@ -985,6 +1023,7 @@ export default function SubmitEntry({
                   <Button
                     type="button"
                     onClick={() => {
+                      onClearDraft?.();
                       clearEditingEntry?.();
                       navigate("/entries");
                     }}
@@ -996,7 +1035,11 @@ export default function SubmitEntry({
                 ) : (
                   <Button
                     type="button"
-                    onClick={() => reset(defaultFormValues)}
+                    onClick={() => {
+                      onClearDraft?.();
+                      reset(defaultFormValues);
+                      setStep(1);
+                    }}
                     variant="outline"
                     className="px-4 text-[15px]"
                   >
@@ -1270,4 +1313,15 @@ export default function SubmitEntry({
       </Card>
     </div>
   );
+}
+
+function mergeWithDefaultFormValues(values = {}) {
+  return {
+    ...defaultFormValues,
+    ...values,
+    targets: {
+      ...defaultFormValues.targets,
+      ...(values.targets || {}),
+    },
+  };
 }
