@@ -1128,8 +1128,17 @@ export default function SubmitEntry({
                                 message: "Target cannot be negative",
                               },
                             })}
-                            className="w-32 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+                            className={`w-32 rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 ${
+                              errors.targets?.[row.key]
+                                ? "border-red-400 focus:ring-red-200"
+                                : "focus:ring-gray-300"
+                            }`}
                           />
+                          {errors.targets?.[row.key] && (
+                            <p className="mt-1 text-xs text-red-600">
+                              {errors.targets[row.key].message}
+                            </p>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-gray-700">
                           {formatCurrency(row.amount)}
