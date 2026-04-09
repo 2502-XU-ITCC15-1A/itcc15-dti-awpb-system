@@ -159,8 +159,8 @@ export default function Home({ entries = [], submissionWindow }) {
       <Card
         className={`border-0 shadow-[0_12px_28px_rgba(15,23,42,0.12)] ${
           windowOpen
-            ? "border-teal-200 bg-gradient-to-br from-[#6ea3a6] via-[#4f8f93] to-[#2f7f86]"
-            : "border-rose-200 bg-gradient-to-br from-[#f9d1d1] via-[#f5bcbc] to-[#ef9f9f]"
+            ? "border-0 bg-gradient-to-br from-[#6ea3a6] via-[#4f8f93] to-[#2f7f86]"
+            : "border-0 bg-gradient-to-br from-[#f9d1d1] via-[#f5bcbc] to-[#ef9f9f]"
         }`}
       >
         <CardContent className="p-4 md:p-5">
@@ -217,7 +217,7 @@ export default function Home({ entries = [], submissionWindow }) {
 
           <CardContent>
             {returnedEntries.length === 0 ? (
-              <div className="rounded-2xl bg-slate-50 p-6 text-sm text-slate-500 shadow-inner">
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
                 No returned entries right now.
               </div>
             ) : (
@@ -225,26 +225,20 @@ export default function Home({ entries = [], submissionWindow }) {
                 {returnedEntries.map((entry) => (
                   <div
                     key={entry.id}
-                    className="rounded-2xl bg-slate-50 p-4 shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
+                    className="flex items-center justify-between gap-3 rounded-2xl border border-slate-200/90 bg-slate-50 p-4 shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
                   >
-                    <div className="mb-2 flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-slate-900">
-                          {entry.titleOfActivities}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {entry.unit} • {entry.planningYear || "N/A"}
-                        </p>
-                      </div>
-
-                      <Badge variant={getStatusBadgeVariant(entry.status)}>
-                        {entry.status}
-                      </Badge>
+                    <div className="min-w-0">
+                      <p className="truncate font-medium text-slate-900">
+                        {entry.titleOfActivities}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {entry.unit} • {entry.planningYear || "N/A"}
+                      </p>
                     </div>
 
-                    <p className="text-sm text-slate-600">
-                      {entry.adminComment || "No admin comment provided."}
-                    </p>
+                    <Badge variant={getStatusBadgeVariant(entry.status)}>
+                      {entry.status}
+                    </Badge>
                   </div>
                 ))}
               </div>
@@ -263,7 +257,7 @@ export default function Home({ entries = [], submissionWindow }) {
 
             <CardContent className="flex-1">
               {recentEntries.length === 0 ? (
-                <div className="rounded-2xl bg-slate-50 p-6 text-sm text-slate-500 shadow-inner">
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
                   <p className="text-sm text-slate-500">
                     No entries submitted yet.
                   </p>
@@ -273,7 +267,7 @@ export default function Home({ entries = [], submissionWindow }) {
                   {recentEntries.map((entry) => (
                     <div
                       key={entry.id}
-                      className="flex items-start justify-between gap-3 rounded-2xl bg-slate-50 p-4 shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
+                      className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200/90 bg-slate-50 p-4 shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
                     >
                       <div className="min-w-0">
                         <p className="truncate font-medium text-slate-900">

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import awpbTree from "../data/awpb_dropdown_tree.json";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const FALLBACK_VALUE = "N/A";
 
@@ -86,6 +88,16 @@ function formatCurrency(value) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value || 0);
+}
+
+function formatDateOnly(value) {
+  if (!value) return "N/A";
+
+  return new Date(value).toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
 function buildFormValuesFromEntry(entry) {
@@ -566,23 +578,40 @@ export default function SubmitEntry({
   return (
     <div className="w-full space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
           {isEditingReturnedEntry ? "Edit Returned Entry" : "Submit Entry"}
         </h1>
-        <p className="text-sm text-gray-500">
+        <p className="mt-1 text-sm text-slate-500">
           Complete the AWPB entry in three guided steps.
         </p>
       </div>
 
       {!windowOpen && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <h2 className="mb-1 font-medium text-red-900">
-            Encoding period is closed
-          </h2>
-          <p className="text-sm text-red-800">
-            New submissions and returned-entry edits are currently locked.
-          </p>
-        </div>
+        <Card className="border-0 bg-gradient-to-br from-[#f9d1d1] via-[#f5bcbc] to-[#ef9f9f] shadow-[0_12px_28px_rgba(15,23,42,0.12)]">
+          <CardContent className="p-4 md:p-5">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-base font-semibold text-rose-900">
+                  Encoding period is closed
+                </p>
+                <p className="text-sm text-rose-800">
+                  New submissions and returned-entry edits are currently locked.
+                </p>
+                <p className="mt-1 text-xs text-rose-700">
+                  {formatDateOnly(submissionWindow?.startDate)} to{" "}
+                  {formatDateOnly(submissionWindow?.endDate)}
+                </p>
+              </div>
+
+              <Badge
+                variant="outline"
+                className="self-start border-rose-300 bg-white/40 text-rose-800 md:self-center"
+              >
+                Closed
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {isEditingReturnedEntry && entryToEdit?.adminComment && (

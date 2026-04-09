@@ -37,6 +37,16 @@ function formatDate(value) {
   });
 }
 
+function formatDateOnly(value) {
+  if (!value) return "N/A";
+
+  return new Date(value).toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 function getStatusBadgeVariant(status) {
   switch (status) {
     case "Pending Review":
@@ -130,28 +140,43 @@ export default function MyEntries({
       </div>
 
       {!windowOpen && (
-        <Card className="border-red-200 bg-red-50 shadow-sm">
-          <CardContent className="p-5">
-            <p className="font-medium text-red-900">
-              Encoding period is closed
-            </p>
-            <p className="mt-1 text-sm text-red-800">
-              Returned entries cannot be edited until the submission window
-              opens again.
-            </p>
+        <Card className="border-0 bg-gradient-to-br from-[#f9d1d1] via-[#f5bcbc] to-[#ef9f9f] shadow-[0_12px_28px_rgba(15,23,42,0.12)]">
+          <CardContent className="p-4 md:p-5">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-base font-semibold text-rose-900">
+                  Encoding period is closed
+                </p>
+                <p className="text-sm text-rose-800">
+                  Returned entries cannot be edited until the submission window
+                  opens again.
+                </p>
+                <p className="mt-1 text-xs text-rose-700">
+                  {formatDateOnly(submissionWindow?.startDate)} to{" "}
+                  {formatDateOnly(submissionWindow?.endDate)}
+                </p>
+              </div>
+
+              <Badge
+                variant="outline"
+                className="self-start border-rose-300 bg-white/40 text-rose-800 md:self-center"
+              >
+                Closed
+              </Badge>
+            </div>
           </CardContent>
         </Card>
       )}
 
-      <Card className="overflow-hidden border-slate-200 shadow-sm">
-        <CardHeader className="border-b bg-white">
+      <Card className="overflow-hidden border-0 shadow-[0_10px_24px_rgba(15,23,42,0.08)] gap-0 py-0">
+        <CardHeader className="border-b bg-white px-6 pt-5 pb-4">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div>
               <CardTitle className="text-2xl">All Submitted Entries</CardTitle>
               <p className="mt-1 text-sm text-slate-500">
                 Search and filter your submitted AWPB entries.
               </p>
-              <p className="mt-3 text-sm text-slate-500">
+              <p className="mt-6 text-sm text-slate-500">
                 Showing {filteredEntries.length} of {entries.length} entries
               </p>
             </div>
@@ -208,7 +233,7 @@ export default function MyEntries({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full table-fixed text-sm">
+              <table className="w-full table-fixed border-collapse text-sm">
                 <colgroup>
                   <col className="w-[30%]" />
                   <col className="w-[11%]" />
@@ -221,25 +246,25 @@ export default function MyEntries({
 
                 <thead className="bg-slate-50 text-left">
                   <tr className="border-b">
-                    <th className="px-4 py-3 font-semibold text-slate-700">
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
                       Title
                     </th>
-                    <th className="px-4 py-3 font-semibold text-slate-700">
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
                       Unit
                     </th>
-                    <th className="px-4 py-3 font-semibold text-slate-700">
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
                       Year
                     </th>
-                    <th className="px-4 py-3 font-semibold text-slate-700">
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
                       Submitted
                     </th>
-                    <th className="px-4 py-3 font-semibold text-slate-700">
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
                       Status
                     </th>
-                    <th className="px-4 py-3 text-right font-semibold text-slate-700">
+                    <th className="px-4 py-2.5 text-right font-semibold text-slate-700">
                       Total
                     </th>
-                    <th className="px-4 py-3 text-centered font-semibold text-slate-700">
+                    <th className="px-4 py-2.5 text-centered font-semibold text-slate-700">
                       Action
                     </th>
                   </tr>
