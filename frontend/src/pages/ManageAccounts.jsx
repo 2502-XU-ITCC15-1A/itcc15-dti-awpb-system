@@ -9,57 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-const INITIAL_ACCOUNTS = [
-  {
-    id: "acc-001",
-    username: "enc_kalmonte",
-    fullName: "Kate Cassandra G. Almonte",
-    email: "kate.almonte@dti.gov.ph",
-    role: "encoder",
-    status: "active",
-  },
-  {
-    id: "acc-002",
-    username: "adm_kbaygan",
-    fullName: "Kristine Jean P. Baygan",
-    email: "kristine.baygan@dti.gov.ph",
-    role: "admin",
-    status: "active",
-  },
-  {
-    id: "acc-003",
-    username: "adm_glayo",
-    fullName: "Glavine Grace C. Layo",
-    email: "glavine.layo@dti.gov.ph",
-    role: "admin",
-    status: "active",
-  },
-  {
-    id: "acc-004",
-    username: "enc_ftan",
-    fullName: "Frances Ryle R. Tan",
-    email: "frances.tan@dti.gov.ph",
-    role: "encoder",
-    status: "active",
-  },
-  {
-    id: "acc-005",
-    username: "enc_ftamano",
-    fullName: "Bae Fatma Razzia D. Tamano",
-    email: "fatma.tamano@dti.gov.ph",
-    role: "encoder",
-    status: "deactivated",
-  },
-  {
-    id: "acc-006",
-    username: "adm_kchavez",
-    fullName: "Keisha Kate S. Chavez",
-    email: "keisha.chavez@dti.gov.ph",
-    role: "admin",
-    status: "active",
-  },
-];
-
 const EMPTY_EDIT_FORM = {
   username: "",
   fullName: "",
@@ -77,8 +26,7 @@ function getStatusBadgeVariant(status) {
   return status === "active" ? "statusApproved" : "statusRejected";
 }
 
-export default function ManageAccounts() {
-  const [accounts, setAccounts] = useState(INITIAL_ACCOUNTS);
+export default function ManageAccounts({ accounts = [], onUpdateAccount }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -185,19 +133,12 @@ export default function ManageAccounts() {
       return;
     }
 
-    setAccounts((prev) =>
-      prev.map((account) =>
-        account.id === editTarget.id
-          ? {
-              ...account,
-              username: editForm.username.trim().toLowerCase(),
-              fullName: editForm.fullName.trim(),
-              email: editForm.email.trim(),
-              role: editForm.role,
-            }
-          : account,
-      ),
-    );
+    onUpdateAccount?.(editTarget.id, {
+      username: editForm.username.trim().toLowerCase(),
+      fullName: editForm.fullName.trim(),
+      email: editForm.email.trim(),
+      role: editForm.role,
+    });
 
     closeEditModal();
   };
@@ -205,23 +146,17 @@ export default function ManageAccounts() {
   const handleDeactivate = () => {
     if (!deactivateTarget) return;
 
-    setAccounts((prev) =>
-      prev.map((account) =>
-        account.id === deactivateTarget.id
-          ? { ...account, status: "deactivated" }
-          : account,
-      ),
-    );
+    onUpdateAccount?.(deactivateTarget.id, {
+      status: "deactivated",
+    });
 
     setDeactivateTarget(null);
   };
 
   const handleActivate = (accountId) => {
-    setAccounts((prev) =>
-      prev.map((account) =>
-        account.id === accountId ? { ...account, status: "active" } : account,
-      ),
-    );
+    onUpdateAccount?.(accountId, {
+      status: "active",
+    });
   };
 
   const resetFilters = () => {

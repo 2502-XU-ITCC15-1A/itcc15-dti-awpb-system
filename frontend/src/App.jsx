@@ -11,10 +11,30 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ManageAccounts from "./pages/ManageAccounts";
 import AddNewAccount from "./pages/AddNewAccount";
 
+const INITIAL_ACCOUNTS = [
+  {
+    id: "acc-001",
+    username: "enc_kalmonte",
+    fullName: "Kate Cassandra G. Almonte",
+    email: "kate.almonte@dti.gov.ph",
+    role: "encoder",
+    status: "active",
+  },
+  {
+    id: "acc-002",
+    username: "adm_kbaygan",
+    fullName: "Kristine Jean P. Baygan",
+    email: "kristine.baygan@dti.gov.ph",
+    role: "admin",
+    status: "active",
+  },
+];
+
 function App() {
   const [entries, setEntries] = useState([]);
   const [entryBeingEdited, setEntryBeingEdited] = useState(null);
   const [submitEntryDraft, setSubmitEntryDraft] = useState(null);
+  const [accounts, setAccounts] = useState(INITIAL_ACCOUNTS);
 
   const [submissionWindow, setSubmissionWindow] = useState({
     startDate: "2026-04-01",
@@ -65,6 +85,18 @@ function App() {
 
   const clearSubmitEntryDraft = () => {
     setSubmitEntryDraft(null);
+  };
+
+  const handleAddAccount = (newAccount) => {
+    setAccounts((prev) => [newAccount, ...prev]);
+  };
+
+  const handleUpdateAccount = (accountId, updates) => {
+    setAccounts((prev) =>
+      prev.map((account) =>
+        account.id === accountId ? { ...account, ...updates } : account,
+      ),
+    );
   };
 
   const navItems = useMemo(() => {
@@ -182,7 +214,10 @@ function App() {
           path="/admin/manage-accounts"
           element={
             currentRole === "admin" ? (
-              <ManageAccounts />
+              <ManageAccounts
+                accounts={accounts}
+                onUpdateAccount={handleUpdateAccount}
+              />
             ) : (
               <Navigate to="/" replace />
             )
@@ -193,7 +228,7 @@ function App() {
           path="/admin/manage-accounts/new"
           element={
             currentRole === "admin" ? (
-              <AddNewAccount />
+              <AddNewAccount onAddAccount={handleAddAccount} />
             ) : (
               <Navigate to="/" replace />
             )
