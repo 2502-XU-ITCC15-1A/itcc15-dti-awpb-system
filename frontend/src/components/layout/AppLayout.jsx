@@ -170,7 +170,7 @@ export default function AppLayout({
 
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">
-                  {currentUser?.username || "User"}
+                  {currentUser?.fullName || currentUser?.username || "User"}
                 </p>
                 <p className="text-xs text-white/70 capitalize">
                   {currentUser?.role || "encoder"}

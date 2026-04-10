@@ -47,7 +47,14 @@ function App() {
   const currentRole = authUser?.role || null;
 
   const handleLogin = (user) => {
-    setAuthUser(user);
+    const matchedAccount = accounts.find(
+      (account) => account.username === user.username,
+    );
+
+    setAuthUser({
+      ...user,
+      fullName: matchedAccount?.fullName || user.username,
+    });
   };
 
   const handleLogout = () => {
