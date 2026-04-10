@@ -7,7 +7,6 @@ export default function Login({ onLogin }) {
     const [formData, setFormData] = useState({
         username: "",
         password: "",
-        role: "encoder",
     })
     const [error, setError] = useState("")
 
@@ -27,11 +26,25 @@ export default function Login({ onLogin }) {
             return
         }
 
+        const normalizedUsername = formData.username.trim().toLowerCase()
+        let detectedRole = null
+
+        if (normalizedUsername.startsWith("enc_")) {
+            detectedRole = "encoder"
+        } else if (normalizedUsername.startsWith("adm_")) {
+            detectedRole = "admin"
+        }
+
+        if (!detectedRole) {
+            setError("Use a valid role-based username like enc_jdelacruz or adm_jdelacruz.")
+            return
+        }
+
         setError("")
 
         onLogin({
-            username: formData.username.trim(),
-            role: formData.role,
+            username: normalizedUsername,
+            role: detectedRole,
         })
     }
 
@@ -63,9 +76,12 @@ export default function Login({ onLogin }) {
                             name="username"
                             value={formData.username}
                             onChange={handleChange}
-                            placeholder="Example123"
+                            placeholder="enc_jdelacruz or adm_jdelacruz"
                             className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-slate-300"
                         />
+                        <p className="mt-2 text-xs text-slate-500">
+                            Role is determined by the username prefix for this frontend prototype.
+                        </p>
                     </div>
 
                     <div>
@@ -91,25 +107,6 @@ export default function Login({ onLogin }) {
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
-                    </div>
-
-                    <div>
-                        <label className="mb-2 block text-sm font-medium text-slate-700">
-                            Role
-                        </label>
-                        <select
-                            name="role"
-                            value={formData.role}
-                            onChange={handleChange}
-                            className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-slate-300"
-                        >
-                            <option value="encoder">Encoder</option>
-                            <option value="admin">Admin</option>
-                        </select>
-
-                        <p className="mt-2 text-xs text-slate-500">
-                            Temporary for frontend testing only. Backend will determine the real role later.
-                        </p>
                     </div>
 
                     <div className="text-right">
