@@ -228,7 +228,7 @@ export default function AdminEntryReviewModal({
             <button
               type="button"
               onClick={handleApprove}
-              className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+              className="rounded-lg border border-green-200 bg-green-100 px-4 py-2 text-sm font-medium text-green-800 transition hover:bg-green-200"
             >
               Approve
             </button>
