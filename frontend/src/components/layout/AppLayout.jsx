@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import logo from "../../assets/logo.png";
 import { NavLink, useLocation } from "react-router-dom";
+import Toast from "@/components/ui/toast";
 import {
   LayoutDashboard,
   FileText,
@@ -29,6 +30,8 @@ export default function AppLayout({
   currentRole = "encoder",
   currentUser,
   onLogout,
+  toast,
+  onDismissToast,
 }) {
   const location = useLocation();
   const [hoveredMenu, setHoveredMenu] = useState(null);
@@ -192,6 +195,7 @@ export default function AppLayout({
 
       <main className="flex-1 p-4 md:p-5">
         <div className="h-[calc(100vh-2rem)] overflow-y-auto rounded-[2rem] bg-[#edf4f3] px-6 py-6 text-slate-900 md:px-8 md:py-8">
+          <Toast toast={toast} onDismiss={onDismissToast} />
           {children}
         </div>
       </main>

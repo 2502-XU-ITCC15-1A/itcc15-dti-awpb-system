@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 
@@ -14,17 +14,17 @@ import AddNewAccount from "./pages/AddNewAccount";
 const INITIAL_ACCOUNTS = [
   {
     id: "acc-001",
-    username: "enc_kalmonte",
-    fullName: "Kate Cassandra G. Almonte",
-    email: "kate.almonte@dti.gov.ph",
+    username: "enc_user",
+    fullName: "Default Encoder",
+    email: "encoder@dti.gov.ph",
     role: "encoder",
     status: "active",
   },
   {
     id: "acc-002",
-    username: "adm_kbaygan",
-    fullName: "Kristine Jean P. Baygan",
-    email: "kristine.baygan@dti.gov.ph",
+    username: "adm_admin",
+    fullName: "Default Admin",
+    email: "admin@dti.gov.ph",
     role: "admin",
     status: "active",
   },
@@ -42,6 +42,9 @@ function App() {
   });
 
   const [authUser, setAuthUser] = useState(null);
+  const [toast, setToast] = useState(null);
+  const toastTimeoutRef = useRef(null);
+  const toastDismissRef = useRef(null);
 
   const isAuthenticated = Boolean(authUser);
   const currentRole = authUser?.role || null;
@@ -51,9 +54,13 @@ function App() {
       (account) => account.username === user.username,
     );
 
+    if (!matchedAccount) return;
+
     setAuthUser({
-      ...user,
-      fullName: matchedAccount?.fullName || user.username,
+      id: matchedAccount.id,
+      username: matchedAccount.username,
+      role: matchedAccount.role,
+      fullName: matchedAccount.fullName || matchedAccount.username,
     });
   };
 
@@ -61,6 +68,35 @@ function App() {
     setAuthUser(null);
     setEntryBeingEdited(null);
     setSubmitEntryDraft(null);
+  };
+
+  const showToast = ({ title, description = "", type = "info" }) => {
+    const id = Date.now();
+    setToast({ id, title, description, type, exiting: false });
+
+    window.clearTimeout(toastTimeoutRef.current);
+    window.clearTimeout(toastDismissRef.current);
+    toastTimeoutRef.current = window.setTimeout(() => {
+      dismissToast(id);
+    }, 2600);
+  };
+
+  const dismissToast = (toastId) => {
+    setToast((current) => {
+      if (!current || current.id !== toastId || current.exiting) {
+        return current;
+      }
+
+      return {
+        ...current,
+        exiting: true,
+      };
+    });
+
+    window.clearTimeout(toastDismissRef.current);
+    toastDismissRef.current = window.setTimeout(() => {
+      setToast((current) => (current?.id === toastId ? null : current));
+    }, 220);
   };
 
   const handleAddEntry = (newEntry) => {
@@ -106,6 +142,47 @@ function App() {
     );
   };
 
+  useEffect(() => {
+    if (!authUser?.id) return;
+
+    const matchedAccount = accounts.find((account) => account.id === authUser.id);
+
+    if (!matchedAccount || matchedAccount.status !== "active") {
+      setAuthUser(null);
+      setEntryBeingEdited(null);
+      setSubmitEntryDraft(null);
+      return;
+    }
+
+    setAuthUser((prev) => {
+      if (!prev) return prev;
+
+      const nextUser = {
+        ...prev,
+        username: matchedAccount.username,
+        role: matchedAccount.role,
+        fullName: matchedAccount.fullName || matchedAccount.username,
+      };
+
+      if (
+        prev.username === nextUser.username &&
+        prev.role === nextUser.role &&
+        prev.fullName === nextUser.fullName
+      ) {
+        return prev;
+      }
+
+      return nextUser;
+    });
+  }, [accounts, authUser?.id]);
+
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(toastTimeoutRef.current);
+      window.clearTimeout(toastDismissRef.current);
+    };
+  }, []);
+
   const navItems = useMemo(() => {
     if (currentRole === "admin") {
       return [
@@ -130,7 +207,7 @@ function App() {
   }, [currentRole])
 
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} />;
+    return <Login onLogin={handleLogin} accounts={accounts} />;
   }
 
   return (
@@ -139,6 +216,12 @@ function App() {
       currentRole={currentRole}
       currentUser={authUser}
       onLogout={handleLogout}
+      toast={toast}
+      onDismissToast={() => {
+        if (toast?.id) {
+          dismissToast(toast.id);
+        }
+      }}
     >
       <Routes>
         <Route
@@ -210,6 +293,7 @@ function App() {
                 entries={entries}
                 onUpdateEntry={handleUpdateEntry}
                 submissionWindow={submissionWindow}
+                onShowToast={showToast}
               />
             ) : (
               <Navigate to="/" replace />
@@ -224,6 +308,7 @@ function App() {
               <ManageAccounts
                 accounts={accounts}
                 onUpdateAccount={handleUpdateAccount}
+                onShowToast={showToast}
               />
             ) : (
               <Navigate to="/" replace />
@@ -235,7 +320,11 @@ function App() {
           path="/admin/manage-accounts/new"
           element={
             currentRole === "admin" ? (
-              <AddNewAccount onAddAccount={handleAddAccount} />
+              <AddNewAccount
+                accounts={accounts}
+                onAddAccount={handleAddAccount}
+                onShowToast={showToast}
+              />
             ) : (
               <Navigate to="/" replace />
             )

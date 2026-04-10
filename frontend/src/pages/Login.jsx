@@ -2,7 +2,7 @@ import { useState } from "react"
 import { Eye, EyeOff } from "lucide-react"
 import logo from "../assets/logo.png"
 
-export default function Login({ onLogin }) {
+export default function Login({ onLogin, accounts = [] }) {
     const [showPassword, setShowPassword] = useState(false)
     const [formData, setFormData] = useState({
         username: "",
@@ -27,16 +27,17 @@ export default function Login({ onLogin }) {
         }
 
         const normalizedUsername = formData.username.trim().toLowerCase()
-        let detectedRole = null
+        const matchedAccount = accounts.find(
+            (account) => account.username === normalizedUsername
+        )
 
-        if (normalizedUsername.startsWith("enc_")) {
-            detectedRole = "encoder"
-        } else if (normalizedUsername.startsWith("adm_")) {
-            detectedRole = "admin"
+        if (!matchedAccount) {
+            setError("This username is not in the current account list.")
+            return
         }
 
-        if (!detectedRole) {
-            setError("Use a valid role-based username like enc_jdelacruz or adm_jdelacruz.")
+        if (matchedAccount.status !== "active") {
+            setError("This account is deactivated and cannot sign in.")
             return
         }
 
@@ -44,7 +45,7 @@ export default function Login({ onLogin }) {
 
         onLogin({
             username: normalizedUsername,
-            role: detectedRole,
+            role: matchedAccount.role,
         })
     }
 
@@ -76,11 +77,11 @@ export default function Login({ onLogin }) {
                             name="username"
                             value={formData.username}
                             onChange={handleChange}
-                            placeholder="enc_jdelacruz or adm_jdelacruz"
+                            placeholder="enc_user or adm_admin"
                             className="w-full rounded-2xl border border-slate-300 px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-slate-300"
                         />
                         <p className="mt-2 text-xs text-slate-500">
-                            Role is determined by the username prefix for this frontend prototype.
+                            Frontend prototype login only allows usernames that exist in the current account list.
                         </p>
                     </div>
 
@@ -110,12 +111,9 @@ export default function Login({ onLogin }) {
                     </div>
 
                     <div className="text-right">
-                        <button
-                            type="button"
-                            className="text-sm font-medium text-[#2a6b71] hover:underline"
-                        >
-                            Forgot Password?
-                        </button>
+                        <p className="text-sm text-slate-500">
+                            Password verification is mocked on the frontend for demo purposes.
+                        </p>
                     </div>
 
                     {error && (

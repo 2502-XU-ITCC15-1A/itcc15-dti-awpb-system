@@ -54,6 +54,7 @@ function getStatusBadgeVariant(status) {
 export default function AdminReview({
   entries = [],
   onUpdateEntry,
+  onShowToast,
 }) {
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -96,10 +97,17 @@ export default function AdminReview({
   const handleApprove = (note) => {
     if (!selectedEntry) return;
 
+    const entryTitle = selectedEntry.titleOfActivities;
     onUpdateEntry(selectedEntry.id, {
       status: "Approved",
       adminComment: note || "",
       reviewedAt: new Date().toISOString(),
+    });
+
+    onShowToast?.({
+      title: "Entry approved",
+      description: `${entryTitle} was approved successfully.`,
+      type: "success",
     });
 
     setSelectedEntry(null);
@@ -108,10 +116,17 @@ export default function AdminReview({
   const handleReturn = (note) => {
     if (!selectedEntry) return;
 
+    const entryTitle = selectedEntry.titleOfActivities;
     onUpdateEntry(selectedEntry.id, {
       status: "Returned",
       adminComment: note,
       reviewedAt: new Date().toISOString(),
+    });
+
+    onShowToast?.({
+      title: "Entry returned",
+      description: `${entryTitle} was returned for revision.`,
+      type: "success",
     });
 
     setSelectedEntry(null);
@@ -120,10 +135,17 @@ export default function AdminReview({
   const handleReject = (note) => {
     if (!selectedEntry) return;
 
+    const entryTitle = selectedEntry.titleOfActivities;
     onUpdateEntry(selectedEntry.id, {
       status: "Rejected",
       adminComment: note,
       reviewedAt: new Date().toISOString(),
+    });
+
+    onShowToast?.({
+      title: "Entry rejected",
+      description: `${entryTitle} was rejected.`,
+      type: "success",
     });
 
     setSelectedEntry(null);

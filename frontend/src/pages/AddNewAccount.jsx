@@ -14,7 +14,11 @@ const EMPTY_FORM = {
   role: "encoder",
 };
 
-export default function AddNewAccount({ onAddAccount }) {
+export default function AddNewAccount({
+  accounts = [],
+  onAddAccount,
+  onShowToast,
+}) {
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY_FORM);
   const [errors, setErrors] = useState({});
@@ -39,20 +43,23 @@ export default function AddNewAccount({ onAddAccount }) {
 
   const handleSave = () => {
     const nextErrors = {};
+    const normalizedUsername = form.username.trim().toLowerCase();
 
-    if (!form.username.trim()) {
+    if (!normalizedUsername) {
       nextErrors.username = "Username is required.";
-    } else if (!/^(enc|adm)_[a-z0-9_]+$/.test(form.username.trim())) {
+    } else if (!/^(enc|adm)_[a-z0-9_]+$/.test(normalizedUsername)) {
       nextErrors.username =
         "Use a username like enc_jdelacruz or adm_jdelacruz.";
     } else if (
-      (form.role === "encoder" && !form.username.trim().startsWith("enc_")) ||
-      (form.role === "admin" && !form.username.trim().startsWith("adm_"))
+      (form.role === "encoder" && !normalizedUsername.startsWith("enc_")) ||
+      (form.role === "admin" && !normalizedUsername.startsWith("adm_"))
     ) {
       nextErrors.username =
         form.role === "encoder"
           ? "Encoder accounts must use the enc_ prefix."
           : "Admin accounts must use the adm_ prefix.";
+    } else if (accounts.some((account) => account.username === normalizedUsername)) {
+      nextErrors.username = "This username is already assigned to another account.";
     }
 
     if (!form.fullName.trim()) {
@@ -78,16 +85,23 @@ export default function AddNewAccount({ onAddAccount }) {
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length === 0) {
+      const createdName = form.fullName.trim();
+
       onAddAccount?.({
         id:
           typeof crypto !== "undefined" && crypto.randomUUID
             ? crypto.randomUUID()
             : String(Date.now()),
-        username: form.username.trim().toLowerCase(),
+        username: normalizedUsername,
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         role: form.role,
         status: "active",
+      });
+      onShowToast?.({
+        title: "Account created",
+        description: `${createdName} was added to All Accounts.`,
+        type: "success",
       });
       navigate("/admin/manage-accounts");
     }

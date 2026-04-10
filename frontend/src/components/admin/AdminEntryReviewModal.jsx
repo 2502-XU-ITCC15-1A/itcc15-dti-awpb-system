@@ -44,32 +44,37 @@ export default function AdminEntryReviewModal({
   onReject,
 }) {
   const [reviewNote, setReviewNote] = useState("")
+  const [reviewError, setReviewError] = useState("")
 
   useEffect(() => {
     setReviewNote(entry?.adminComment || "")
+    setReviewError("")
   }, [entry])
 
   if (!entry) return null
 
   const handleReturn = () => {
     if (!reviewNote.trim()) {
-      alert("Please enter a review note before returning the entry.")
+      setReviewError("Please enter a review note before returning the entry.")
       return
     }
 
+    setReviewError("")
     onReturn(reviewNote.trim())
   }
 
   const handleReject = () => {
     if (!reviewNote.trim()) {
-      alert("Please enter a review note before rejecting the entry.")
+      setReviewError("Please enter a review note before rejecting the entry.")
       return
     }
 
+    setReviewError("")
     onReject(reviewNote.trim())
   }
 
   const handleApprove = () => {
+    setReviewError("")
     onApprove(reviewNote.trim())
   }
 
@@ -199,10 +204,24 @@ export default function AdminEntryReviewModal({
             <textarea
               rows="4"
               value={reviewNote}
-              onChange={(e) => setReviewNote(e.target.value)}
+              onChange={(e) => {
+                setReviewNote(e.target.value)
+                if (reviewError) {
+                  setReviewError("")
+                }
+              }}
               placeholder="Enter comments or revision instructions"
-              className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-gray-300"
+              className={`w-full rounded-lg border px-3 py-2 text-sm outline-none focus:ring-2 ${
+                reviewError
+                  ? "border-red-300 focus:ring-red-200"
+                  : "focus:ring-gray-300"
+              }`}
             />
+            {reviewError && (
+              <p className="mt-2 text-xs text-red-600">
+                {reviewError}
+              </p>
+            )}
             <p className="mt-2 text-xs text-gray-500">
               Required when returning or rejecting. Optional when approving.
             </p>

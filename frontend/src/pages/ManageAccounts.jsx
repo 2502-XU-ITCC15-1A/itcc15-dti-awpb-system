@@ -26,7 +26,11 @@ function getStatusBadgeVariant(status) {
   return status === "active" ? "statusApproved" : "statusRejected";
 }
 
-export default function ManageAccounts({ accounts = [], onUpdateAccount }) {
+export default function ManageAccounts({
+  accounts = [],
+  onUpdateAccount,
+  onShowToast,
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -94,20 +98,28 @@ export default function ManageAccounts({ accounts = [], onUpdateAccount }) {
 
   const handleSaveChanges = () => {
     const nextErrors = {};
+    const normalizedUsername = editForm.username.trim().toLowerCase();
 
-    if (!editForm.username.trim()) {
+    if (!normalizedUsername) {
       nextErrors.username = "Username is required.";
-    } else if (!/^(enc|adm)_[a-z0-9_]+$/.test(editForm.username.trim())) {
+    } else if (!/^(enc|adm)_[a-z0-9_]+$/.test(normalizedUsername)) {
       nextErrors.username =
         "Use a username like enc_jdelacruz or adm_jdelacruz.";
     } else if (
-      (editForm.role === "encoder" && !editForm.username.trim().startsWith("enc_")) ||
-      (editForm.role === "admin" && !editForm.username.trim().startsWith("adm_"))
+      (editForm.role === "encoder" && !normalizedUsername.startsWith("enc_")) ||
+      (editForm.role === "admin" && !normalizedUsername.startsWith("adm_"))
     ) {
       nextErrors.username =
         editForm.role === "encoder"
           ? "Encoder accounts must use the enc_ prefix."
           : "Admin accounts must use the adm_ prefix.";
+    } else if (
+      accounts.some(
+        (account) =>
+          account.id !== editTarget?.id && account.username === normalizedUsername,
+      )
+    ) {
+      nextErrors.username = "This username is already assigned to another account.";
     }
 
     if (!editForm.fullName.trim()) {
@@ -134,10 +146,16 @@ export default function ManageAccounts({ accounts = [], onUpdateAccount }) {
     }
 
     onUpdateAccount?.(editTarget.id, {
-      username: editForm.username.trim().toLowerCase(),
+      username: normalizedUsername,
       fullName: editForm.fullName.trim(),
       email: editForm.email.trim(),
       role: editForm.role,
+    });
+
+    onShowToast?.({
+      title: "Account updated",
+      description: `${editForm.fullName.trim()} was updated successfully.`,
+      type: "success",
     });
 
     closeEditModal();
@@ -150,13 +168,29 @@ export default function ManageAccounts({ accounts = [], onUpdateAccount }) {
       status: "deactivated",
     });
 
+    onShowToast?.({
+      title: "Account deactivated",
+      description: `${deactivateTarget.fullName} can no longer sign in.`,
+      type: "success",
+    });
+
     setDeactivateTarget(null);
   };
 
   const handleActivate = (accountId) => {
+    const target = accounts.find((account) => account.id === accountId);
+
     onUpdateAccount?.(accountId, {
       status: "active",
     });
+
+    if (target) {
+      onShowToast?.({
+        title: "Account activated",
+        description: `${target.fullName} can sign in again.`,
+        type: "success",
+      });
+    }
   };
 
   const resetFilters = () => {

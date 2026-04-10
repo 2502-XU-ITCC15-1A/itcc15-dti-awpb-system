@@ -23,8 +23,10 @@ const MONTHS = [
   { key: "dec", label: "Dec" },
 ];
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 const defaultFormValues = {
-  planningYear: "2026",
+  planningYear: String(CURRENT_YEAR),
   unit: "",
   component: "",
   useOtherShortcut: false,
@@ -111,7 +113,7 @@ function buildFormValuesFromEntry(entry) {
   }, {});
 
   return {
-    planningYear: entry.planningYear || "2026",
+    planningYear: entry.planningYear || String(CURRENT_YEAR),
     unit: entry.unit || "",
     component: entry.component || "",
     useOtherShortcut: false,
@@ -165,7 +167,9 @@ export default function SubmitEntry({
     defaultValues: defaultFormValues,
   });
 
-  const planningYears = ["2026", "2027", "2028"];
+  const planningYears = Array.from({ length: 5 }, (_, index) =>
+    String(CURRENT_YEAR + index),
+  );
   const isEditingReturnedEntry =
     entryToEdit && entryToEdit.status === "Returned";
 
