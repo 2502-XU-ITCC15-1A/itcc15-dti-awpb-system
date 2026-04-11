@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { Eye, EyeOff } from "lucide-react"
 import logo from "../assets/logo.png"
 
@@ -111,9 +112,12 @@ export default function Login({ onLogin, accounts = [] }) {
                     </div>
 
                     <div className="text-right">
-                        <p className="text-sm text-slate-500">
-                            Password verification is mocked on the frontend for demo purposes.
-                        </p>
+                        <Link
+                            to="/forgot-password"
+                            className="text-sm font-medium text-[#2a6b71] transition hover:underline"
+                        >
+                            Forgot Password?
+                        </Link>
                     </div>
 
                     {error && (

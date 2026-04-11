@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
 import Home from "./pages/Home";
 import MyEntries from "./pages/MyEntries";
 import SubmitEntry from "./pages/SubmitEntry";
@@ -207,7 +208,22 @@ function App() {
   }, [currentRole])
 
   if (!isAuthenticated) {
-    return <Login onLogin={handleLogin} accounts={accounts} />;
+    return (
+      <Routes>
+        <Route
+          path="/login"
+          element={<Login onLogin={handleLogin} accounts={accounts} />}
+        />
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword accounts={accounts} />}
+        />
+        <Route
+          path="*"
+          element={<Navigate to="/login" replace />}
+        />
+      </Routes>
+    );
   }
 
   return (
