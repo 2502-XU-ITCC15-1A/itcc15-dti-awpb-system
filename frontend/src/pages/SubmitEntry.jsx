@@ -149,6 +149,7 @@ export default function SubmitEntry({
   draftState,
   onDraftChange,
   onClearDraft,
+  currentUser,
 }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -542,6 +543,10 @@ export default function SubmitEntry({
     if (isEditingReturnedEntry) {
       const updatedEntry = {
         ...entryToEdit,
+        ownerId: entryToEdit.ownerId || currentUser?.id || "",
+        ownerUsername: entryToEdit.ownerUsername || currentUser?.username || "",
+        ownerFullName:
+          entryToEdit.ownerFullName || currentUser?.fullName || "",
         planningYear: data.planningYear,
         unit: data.unit,
         component: data.component,
@@ -578,6 +583,9 @@ export default function SubmitEntry({
         typeof crypto !== "undefined" && crypto.randomUUID
           ? crypto.randomUUID()
           : String(Date.now()),
+      ownerId: currentUser?.id || "",
+      ownerUsername: currentUser?.username || "",
+      ownerFullName: currentUser?.fullName || "",
       planningYear: data.planningYear,
       unit: data.unit,
       component: data.component,

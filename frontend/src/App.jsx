@@ -49,6 +49,11 @@ function App() {
 
   const isAuthenticated = Boolean(authUser);
   const currentRole = authUser?.role || null;
+  const encoderEntries = useMemo(() => {
+    if (!authUser?.id) return [];
+
+    return entries.filter((entry) => entry.ownerId === authUser.id);
+  }, [authUser?.id, entries]);
 
   const handleLogin = (user) => {
     const matchedAccount = accounts.find(
@@ -241,10 +246,31 @@ function App() {
     >
       <Routes>
         <Route
+          path="/login"
+          element={
+            <Navigate
+              to={currentRole === "admin" ? "/admin/dashboard" : "/"}
+              replace
+            />
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <Navigate
+              to={currentRole === "admin" ? "/admin/dashboard" : "/"}
+              replace
+            />
+          }
+        />
+        <Route
           path="/"
           element={
             currentRole === "encoder" ? (
-              <Home entries={entries} submissionWindow={submissionWindow} />
+              <Home
+                entries={encoderEntries}
+                submissionWindow={submissionWindow}
+              />
             ) : (
               <Navigate to="/admin/dashboard" replace />
             )
@@ -256,7 +282,7 @@ function App() {
           element={
             currentRole === "encoder" ? (
               <MyEntries
-                entries={entries}
+                entries={encoderEntries}
                 onEditEntry={handleStartEdit}
                 submissionWindow={submissionWindow}
               />
@@ -279,6 +305,7 @@ function App() {
                 draftState={submitEntryDraft}
                 onDraftChange={setSubmitEntryDraft}
                 onClearDraft={clearSubmitEntryDraft}
+                currentUser={authUser}
               />
             ) : (
               <Navigate to="/admin/dashboard" replace />
