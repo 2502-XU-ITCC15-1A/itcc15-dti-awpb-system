@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Search, Eye } from "lucide-react";
+import { Search, Eye, Trash2 } from "lucide-react";
 
 import AdminEntryReviewModal from "../components/admin/AdminEntryReviewModal";
+import AdminDeleteEntryModal from "../components/admin/AdminDeleteEntryModal";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -54,9 +55,11 @@ function getStatusBadgeVariant(status) {
 export default function AdminReview({
   entries = [],
   onUpdateEntry,
+  onDeleteEntry,
   onShowToast,
 }) {
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [unitFilter, setUnitFilter] = useState("all");
@@ -158,6 +161,25 @@ export default function AdminReview({
     setYearFilter("all");
   };
 
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+
+    const entryTitle = deleteTarget.titleOfActivities;
+
+    onDeleteEntry?.(deleteTarget.id);
+    onShowToast?.({
+      title: "Entry deleted",
+      description: `${entryTitle} was removed successfully.`,
+      type: "success",
+    });
+
+    if (selectedEntry?.id === deleteTarget.id) {
+      setSelectedEntry(null);
+    }
+
+    setDeleteTarget(null);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -182,8 +204,8 @@ export default function AdminReview({
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-2 xl:justify-end">
-              <div className="relative min-w-[300px]">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
+              <div className="relative w-full sm:min-w-[300px] sm:flex-1 xl:max-w-[340px]">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   value={searchTerm}
@@ -194,7 +216,7 @@ export default function AdminReview({
               </div>
 
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[160px]">
+                <SelectTrigger className="w-full sm:w-[160px]">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -207,7 +229,7 @@ export default function AdminReview({
               </Select>
 
               <Select value={unitFilter} onValueChange={setUnitFilter}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue placeholder="All Units" />
                 </SelectTrigger>
                 <SelectContent>
@@ -221,7 +243,7 @@ export default function AdminReview({
               </Select>
 
               <Select value={yearFilter} onValueChange={setYearFilter}>
-                <SelectTrigger className="w-[140px]">
+                <SelectTrigger className="w-full sm:w-[140px]">
                   <SelectValue placeholder="All Years" />
                 </SelectTrigger>
                 <SelectContent>
@@ -234,7 +256,7 @@ export default function AdminReview({
                 </SelectContent>
               </Select>
 
-              <Button variant="outline" onClick={clearFilters}>
+              <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
                 Reset
               </Button>
             </div>
@@ -248,15 +270,15 @@ export default function AdminReview({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full table-fixed border-collapse text-sm">
+              <table className="min-w-[920px] w-full table-fixed border-collapse text-sm">
                 <colgroup>
-                  <col className="w-[32%]" />
+                  <col className="w-[30%]" />
                   <col className="w-[10%]" />
                   <col className="w-[10%]" />
                   <col className="w-[18%]" />
                   <col className="w-[13%]" />
                   <col className="w-[11%]" />
-                  <col className="w-[6%]" />
+                  <col className="w-[8%]" />
                 </colgroup>
 
                 <thead className="bg-slate-50 text-left">
@@ -316,7 +338,7 @@ export default function AdminReview({
                       </td>
 
                       <td className="px-4 py-4 align-middle">
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-center justify-center gap-1">
                           <Button
                             type="button"
                             variant="ghost"
@@ -327,6 +349,17 @@ export default function AdminReview({
                             className="text-blue-600 hover:text-blue-700"
                           >
                             <Eye />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setDeleteTarget(entry)}
+                            title="Delete entry"
+                            aria-label="Delete entry"
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 />
                           </Button>
                         </div>
                       </td>
@@ -345,6 +378,13 @@ export default function AdminReview({
         onApprove={handleApprove}
         onReturn={handleReturn}
         onReject={handleReject}
+      />
+
+      <AdminDeleteEntryModal
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        entry={deleteTarget}
+        onConfirm={handleDelete}
       />
     </div>
   );

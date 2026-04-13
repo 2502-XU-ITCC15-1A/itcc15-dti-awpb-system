@@ -117,6 +117,10 @@ function App() {
     );
   };
 
+  const handleDeleteEntry = (entryId) => {
+    setEntries((prev) => prev.filter((entry) => entry.id !== entryId));
+  };
+
   const handleStartEdit = (entry) => {
     setEntryBeingEdited(entry);
   };
@@ -335,6 +339,7 @@ function App() {
               <AdminReview
                 entries={entries}
                 onUpdateEntry={handleUpdateEntry}
+                onDeleteEntry={handleDeleteEntry}
                 submissionWindow={submissionWindow}
                 onShowToast={showToast}
               />
