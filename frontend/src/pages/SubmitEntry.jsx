@@ -29,7 +29,6 @@ const defaultFormValues = {
   planningYear: String(CURRENT_YEAR),
   unit: "",
   component: "",
-  useOtherShortcut: false,
   subComponent: "",
   keyActivity: "",
   no: "",
@@ -52,31 +51,6 @@ const defaultFormValues = {
     dec: "",
   },
 };
-
-function findOtherOperatingPath(componentNode) {
-  if (!componentNode || typeof componentNode !== "object") return null;
-
-  for (const [subComponentKey, keyActivities] of Object.entries(
-    componentNode,
-  )) {
-    if (!keyActivities || typeof keyActivities !== "object") continue;
-
-    for (const keyActivityKey of Object.keys(keyActivities)) {
-      if (
-        keyActivityKey
-          .toLowerCase()
-          .includes("other operating cost attributed to component")
-      ) {
-        return {
-          subComponentKey,
-          keyActivityKey,
-        };
-      }
-    }
-  }
-
-  return null;
-}
 
 function toNumber(value) {
   if (value === "" || value === null || value === undefined) return 0;
@@ -116,7 +90,6 @@ function buildFormValuesFromEntry(entry) {
     planningYear: entry.planningYear || String(CURRENT_YEAR),
     unit: entry.unit || "",
     component: entry.component || "",
-    useOtherShortcut: false,
     subComponent: entry.subComponent || "",
     keyActivity: entry.keyActivity || "",
     no: entry.no ? String(entry.no) : "",
@@ -180,7 +153,6 @@ export default function SubmitEntry({
   const planningYear = watch("planningYear");
   const unit = watch("unit");
   const component = watch("component");
-  const useOtherShortcut = watch("useOtherShortcut");
   const subComponent = watch("subComponent");
   const keyActivity = watch("keyActivity");
   const selectedNo = watch("no");
@@ -213,10 +185,6 @@ export default function SubmitEntry({
   const currentComponentNode = useMemo(() => {
     return awpbTree.hierarchy?.[component] || null;
   }, [component]);
-
-  const otherShortcutPath = useMemo(() => {
-    return findOtherOperatingPath(currentComponentNode);
-  }, [currentComponentNode]);
 
   const rawSubComponentKeys = useMemo(() => {
     if (!component) return [];
@@ -318,7 +286,6 @@ export default function SubmitEntry({
 
   useEffect(() => {
     resetField("component");
-    resetField("useOtherShortcut");
     resetField("subComponent");
     resetField("keyActivity");
     resetField("no");
@@ -327,7 +294,6 @@ export default function SubmitEntry({
   }, [unit, resetField]);
 
   useEffect(() => {
-    resetField("useOtherShortcut");
     resetField("subComponent");
     resetField("keyActivity");
     resetField("no");
@@ -343,59 +309,11 @@ export default function SubmitEntry({
   }, [component, hasNoSubComponent, resetField, setValue]);
 
   useEffect(() => {
-    if (!component || !otherShortcutPath) return;
-
-    if (useOtherShortcut) {
-      const targetSubComponent =
-        otherShortcutPath.subComponentKey === ""
-          ? FALLBACK_VALUE
-          : otherShortcutPath.subComponentKey;
-
-      setValue("subComponent", targetSubComponent, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-
-      setValue("keyActivity", otherShortcutPath.keyActivityKey, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-
-      resetField("no");
-      resetField("performanceIndicator");
-      resetField("subActivity");
-      return;
-    }
-
-    resetField("subComponent");
     resetField("keyActivity");
     resetField("no");
     resetField("performanceIndicator");
     resetField("subActivity");
-
-    if (hasNoSubComponent) {
-      setValue("subComponent", FALLBACK_VALUE, {
-        shouldValidate: true,
-        shouldDirty: false,
-      });
-    }
-  }, [
-    useOtherShortcut,
-    component,
-    otherShortcutPath,
-    hasNoSubComponent,
-    resetField,
-    setValue,
-  ]);
-
-  useEffect(() => {
-    if (useOtherShortcut) return;
-
-    resetField("keyActivity");
-    resetField("no");
-    resetField("performanceIndicator");
-    resetField("subActivity");
-  }, [subComponent, useOtherShortcut, resetField]);
+  }, [subComponent, resetField]);
 
   useEffect(() => {
     resetField("no");
@@ -615,11 +533,6 @@ export default function SubmitEntry({
     navigate("/entries");
   };
 
-  const shortcutSubComponentLabel =
-    otherShortcutPath?.subComponentKey === ""
-      ? FALLBACK_VALUE
-      : otherShortcutPath?.subComponentKey || "";
-
   const steps = [
     { number: 1, label: "Classification" },
     { number: 2, label: "Budget Computation" },
@@ -788,31 +701,6 @@ export default function SubmitEntry({
                   )}
                 </div>
 
-                {component && otherShortcutPath ? (
-                  <div className="rounded-lg border bg-amber-50 p-4">
-                    <label className="flex items-start gap-3">
-                      <input
-                        type="checkbox"
-                        {...register("useOtherShortcut")}
-                        className="mt-1"
-                      />
-                      <div>
-                        <p className="text-sm font-medium text-amber-900">
-                          Continue to Other Operating Cost
-                        </p>
-                        <p className="text-xs text-amber-800">
-                          This will automatically select the correct Other
-                          Operating Cost path.
-                        </p>
-                      </div>
-                    </label>
-                  </div>
-                ) : (
-                  <div />
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium">
                     Sub component
@@ -831,21 +719,6 @@ export default function SubmitEntry({
                         readOnly
                         value={FALLBACK_VALUE}
                         className="w-full rounded-lg border bg-gray-50 px-3 py-2 text-sm text-gray-600 outline-none"
-                      />
-                    </>
-                  ) : useOtherShortcut && otherShortcutPath ? (
-                    <>
-                      <input
-                        type="hidden"
-                        {...register("subComponent", {
-                          required: "Sub component is required",
-                        })}
-                      />
-                      <input
-                        type="text"
-                        readOnly
-                        value={shortcutSubComponentLabel}
-                        className="w-full rounded-lg border bg-amber-50 px-3 py-2 text-sm text-amber-900 outline-none"
                       />
                     </>
                   ) : (
@@ -871,45 +744,29 @@ export default function SubmitEntry({
                     </p>
                   )}
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium">
                     Key Activity
                   </label>
-
-                  {useOtherShortcut && otherShortcutPath ? (
-                    <>
-                      <input
-                        type="hidden"
-                        {...register("keyActivity", {
-                          required: "Key Activity is required",
-                        })}
-                      />
-                      <input
-                        type="text"
-                        readOnly
-                        value={otherShortcutPath.keyActivityKey}
-                        className="w-full rounded-lg border bg-amber-50 px-3 py-2 text-sm text-amber-900 outline-none"
-                      />
-                    </>
-                  ) : (
-                    <select
-                      {...register("keyActivity", {
-                        required: "Key Activity is required",
-                      })}
-                      disabled={
-                        !component || (!hasNoSubComponent && !subComponent)
-                      }
-                      className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
-                    >
-                      <option value="">Select key activity</option>
-                      {keyActivityOptions.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
-                  )}
+                  <select
+                    {...register("keyActivity", {
+                      required: "Key Activity is required",
+                    })}
+                    disabled={
+                      !component || (!hasNoSubComponent && !subComponent)
+                    }
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:bg-gray-100 disabled:text-gray-400 focus:ring-2 focus:ring-gray-300"
+                  >
+                    <option value="">Select key activity</option>
+                    {keyActivityOptions.map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))}
+                  </select>
 
                   {errors.keyActivity && (
                     <p className="mt-1 text-sm text-red-600">
@@ -917,9 +774,7 @@ export default function SubmitEntry({
                     </p>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium">No.</label>
                   <select
@@ -942,7 +797,9 @@ export default function SubmitEntry({
                     </p>
                   )}
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium">
                     Performance Indicator
@@ -963,9 +820,7 @@ export default function SubmitEntry({
                     </p>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium">
                     Sub Activity
@@ -1009,7 +864,9 @@ export default function SubmitEntry({
                     </p>
                   )}
                 </div>
+              </div>
 
+              <div className="grid grid-cols-1 gap-4">
                 <div>
                   <label className="mb-2 block text-sm font-medium">
                     Title of Activities
