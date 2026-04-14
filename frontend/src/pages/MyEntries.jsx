@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Eye, Pencil, Lock } from "lucide-react";
+import { Search, Eye, Pencil, Lock, Trash2 } from "lucide-react";
 
 import EntryDetailsModal from "../components/entries/EntryDetailsModal";
+import AdminDeleteEntryModal from "../components/admin/AdminDeleteEntryModal";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -77,9 +78,12 @@ function isSubmissionWindowOpen(submissionWindow) {
 export default function MyEntries({
   entries = [],
   onEditEntry,
+  onDeleteEntry,
+  onShowToast,
   submissionWindow,
 }) {
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [yearFilter, setYearFilter] = useState("all");
@@ -126,6 +130,25 @@ export default function MyEntries({
     setSearchTerm("");
     setStatusFilter("all");
     setYearFilter("all");
+  };
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+
+    const entryTitle = deleteTarget.titleOfActivities;
+
+    onDeleteEntry?.(deleteTarget.id);
+    onShowToast?.({
+      title: "Entry deleted",
+      description: `${entryTitle} was removed from your entries.`,
+      type: "success",
+    });
+
+    if (selectedEntry?.id === deleteTarget.id) {
+      setSelectedEntry(null);
+    }
+
+    setDeleteTarget(null);
   };
 
   return (
@@ -340,6 +363,20 @@ export default function MyEntries({
                               {windowOpen ? <Pencil /> : <Lock />}
                             </Button>
                           )}
+
+                          {entry.status === "Pending Review" && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon-sm"
+                              onClick={() => setDeleteTarget(entry)}
+                              title="Delete pending entry"
+                              aria-label="Delete pending entry"
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 />
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -354,6 +391,13 @@ export default function MyEntries({
       <EntryDetailsModal
         entry={selectedEntry}
         onClose={() => setSelectedEntry(null)}
+      />
+
+      <AdminDeleteEntryModal
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        entry={deleteTarget}
+        onConfirm={handleDelete}
       />
     </div>
   );

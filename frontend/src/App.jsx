@@ -288,6 +288,8 @@ function App() {
               <MyEntries
                 entries={encoderEntries}
                 onEditEntry={handleStartEdit}
+                onDeleteEntry={handleDeleteEntry}
+                onShowToast={showToast}
                 submissionWindow={submissionWindow}
               />
             ) : (
