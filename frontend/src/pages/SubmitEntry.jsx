@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
-import awpbTree from "../data/awpb_dropdown_tree.json";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -123,6 +122,7 @@ export default function SubmitEntry({
   onDraftChange,
   onClearDraft,
   currentUser,
+  templateData,
 }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -175,16 +175,16 @@ export default function SubmitEntry({
   });
 
   const unitOptions = useMemo(() => {
-    return awpbTree.unitOptions.map((item) => item.value);
-  }, []);
+    return (templateData?.unitOptions || []).map((item) => item.value);
+  }, [templateData]);
 
   const componentOptions = useMemo(() => {
-    return Object.keys(awpbTree.hierarchy || {});
-  }, []);
+    return Object.keys(templateData?.hierarchy || {});
+  }, [templateData]);
 
   const currentComponentNode = useMemo(() => {
-    return awpbTree.hierarchy?.[component] || null;
-  }, [component]);
+    return templateData?.hierarchy?.[component] || null;
+  }, [component, templateData]);
 
   const rawSubComponentKeys = useMemo(() => {
     if (!component) return [];
@@ -203,16 +203,16 @@ export default function SubmitEntry({
   const keyActivityOptions = useMemo(() => {
     if (!component) return [];
     return Object.keys(
-      awpbTree.hierarchy?.[component]?.[subComponentKey] || {},
+      templateData?.hierarchy?.[component]?.[subComponentKey] || {},
     );
-  }, [component, subComponentKey]);
+  }, [component, subComponentKey, templateData]);
 
   const noOptions = useMemo(() => {
     if (!component || !keyActivity) return [];
     return (
-      awpbTree.hierarchy?.[component]?.[subComponentKey]?.[keyActivity] || []
+      templateData?.hierarchy?.[component]?.[subComponentKey]?.[keyActivity] || []
     );
-  }, [component, subComponentKey, keyActivity]);
+  }, [component, subComponentKey, keyActivity, templateData]);
 
   const selectedNoEntry = useMemo(() => {
     return noOptions.find((item) => String(item.no) === String(selectedNo));

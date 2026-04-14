@@ -13,6 +13,7 @@ import {
   UserPlus,
   ChevronDown,
   ChevronRight,
+  SlidersHorizontal,
 } from "lucide-react";
 
 const iconMap = {
@@ -22,6 +23,7 @@ const iconMap = {
   review: ClipboardCheck,
   accounts: Users,
   addAccount: UserPlus,
+  template: SlidersHorizontal,
 };
 
 export default function AppLayout({

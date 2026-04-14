@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
+import initialTemplateData from "./data/awpb_dropdown_tree.json";
 
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -11,6 +12,7 @@ import AdminReview from "./pages/AdminReview";
 import AdminDashboard from "./pages/AdminDashboard";
 import ManageAccounts from "./pages/ManageAccounts";
 import AddNewAccount from "./pages/AddNewAccount";
+import ManageTemplate from "./pages/ManageTemplate";
 
 const INITIAL_ACCOUNTS = [
   {
@@ -31,11 +33,16 @@ const INITIAL_ACCOUNTS = [
   },
 ];
 
+function createInitialTemplateState() {
+  return JSON.parse(JSON.stringify(initialTemplateData));
+}
+
 function App() {
   const [entries, setEntries] = useState([]);
   const [entryBeingEdited, setEntryBeingEdited] = useState(null);
   const [submitEntryDraft, setSubmitEntryDraft] = useState(null);
   const [accounts, setAccounts] = useState(INITIAL_ACCOUNTS);
+  const [templateData, setTemplateData] = useState(createInitialTemplateState);
 
   const [submissionWindow, setSubmissionWindow] = useState({
     startDate: "2026-04-01",
@@ -198,6 +205,7 @@ function App() {
       return [
         { to: "/admin/dashboard", label: "Dashboard", icon: "dashboard" },
         { to: "/admin/review", label: "Admin Review", icon: "review" },
+        { to: "/admin/manage-template", label: "Manage Template", icon: "template" },
         {
           label: "Manage Accounts",
           icon: "accounts",
@@ -312,9 +320,26 @@ function App() {
                 onDraftChange={setSubmitEntryDraft}
                 onClearDraft={clearSubmitEntryDraft}
                 currentUser={authUser}
+                templateData={templateData}
               />
             ) : (
               <Navigate to="/admin/dashboard" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/admin/manage-template"
+          element={
+            currentRole === "admin" ? (
+              <ManageTemplate
+                templateData={templateData}
+                onUpdateTemplateData={setTemplateData}
+                onResetTemplate={() => setTemplateData(createInitialTemplateState())}
+                onShowToast={showToast}
+              />
+            ) : (
+              <Navigate to="/" replace />
             )
           }
         />
