@@ -705,6 +705,9 @@ export default function ManageTemplate({
         <Card className={panelClass}>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg text-slate-900">Component</CardTitle>
+            <p className={getPanelDescriptionClass(hasSubComponentSelected)}>
+              Select and manage the main component used in this template.
+            </p>
           </CardHeader>
           <CardContent className="space-y-4">
             <button
@@ -860,7 +863,7 @@ export default function ManageTemplate({
               Sub Component
             </CardTitle>
             <p className={getPanelDescriptionClass(hasComponentSelected)}>
-              Refine each component into its working sub-groups.
+              Select and manage the sub component under the chosen component.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -1031,7 +1034,7 @@ export default function ManageTemplate({
               Key Activity
             </CardTitle>
             <p className={getPanelDescriptionClass(hasSubComponentSelected)}>
-              Manage the specific activity tracks under each sub component.
+              Select and manage the key activity under the chosen sub component.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -1226,7 +1229,7 @@ export default function ManageTemplate({
               Performance Indicator
             </CardTitle>
             <p className={getPanelDescriptionClass(hasKeyActivitySelected)}>
-              Select the indicator row and maintain its number and label.
+              Select and manage the performance indicator under the chose key activity.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -1432,7 +1435,7 @@ export default function ManageTemplate({
               Sub Activities
             </CardTitle>
             <p className={getPanelDescriptionClass(hasIndicatorSelected)}>
-              Maintain the dropdown options that appear after selecting an indicator.
+              Select and manage the sub activities under the chosen performance indicator.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
