@@ -701,7 +701,7 @@ export default function ManageTemplate({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className={panelClass}>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg text-slate-900">Component</CardTitle>
@@ -1027,7 +1027,35 @@ export default function ManageTemplate({
             )}
           </CardContent>
         </Card>
+      </div>
 
+      <AdminDeleteTemplateItemModal
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        itemType={
+          deleteTarget?.kind === "component"
+            ? "Component"
+            : deleteTarget?.kind === "subComponent"
+              ? "Sub Component"
+              : deleteTarget?.kind === "keyActivity"
+                ? "Key Activity"
+                : deleteTarget?.kind === "indicator"
+                  ? "Performance Indicator"
+                  : deleteTarget?.kind === "subActivity"
+                    ? "Sub Activity"
+                    : "Template Item"
+        }
+        itemLabel={deleteTarget?.label || ""}
+        onConfirm={() => {
+          if (deleteTarget?.kind === "component") deleteComponent();
+          if (deleteTarget?.kind === "subComponent") deleteSubComponent();
+          if (deleteTarget?.kind === "keyActivity") deleteKeyActivity();
+          if (deleteTarget?.kind === "indicator") deleteIndicator();
+          if (deleteTarget?.kind === "subActivity") deleteSubActivity();
+        }}
+      />
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className={getLockedPanelClass(hasSubComponentSelected)}>
           <CardHeader className="pb-3">
             <CardTitle className={getPanelTitleClass(hasSubComponentSelected)}>
@@ -1194,35 +1222,6 @@ export default function ManageTemplate({
             )}
           </CardContent>
         </Card>
-      </div>
-
-      <AdminDeleteTemplateItemModal
-        open={Boolean(deleteTarget)}
-        onOpenChange={(open) => !open && setDeleteTarget(null)}
-        itemType={
-          deleteTarget?.kind === "component"
-            ? "Component"
-            : deleteTarget?.kind === "subComponent"
-              ? "Sub Component"
-              : deleteTarget?.kind === "keyActivity"
-                ? "Key Activity"
-                : deleteTarget?.kind === "indicator"
-                  ? "Performance Indicator"
-                  : deleteTarget?.kind === "subActivity"
-                    ? "Sub Activity"
-                    : "Template Item"
-        }
-        itemLabel={deleteTarget?.label || ""}
-        onConfirm={() => {
-          if (deleteTarget?.kind === "component") deleteComponent();
-          if (deleteTarget?.kind === "subComponent") deleteSubComponent();
-          if (deleteTarget?.kind === "keyActivity") deleteKeyActivity();
-          if (deleteTarget?.kind === "indicator") deleteIndicator();
-          if (deleteTarget?.kind === "subActivity") deleteSubActivity();
-        }}
-      />
-
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <Card className={getLockedPanelClass(hasKeyActivitySelected)}>
           <CardHeader className="pb-3">
             <CardTitle className={getPanelTitleClass(hasKeyActivitySelected)}>
@@ -1429,7 +1428,12 @@ export default function ManageTemplate({
           </CardContent>
         </Card>
 
-        <Card className={getLockedPanelClass(hasIndicatorSelected)}>
+      </div>
+
+      <div className="flex justify-center">
+        <Card
+          className={`${getLockedPanelClass(hasIndicatorSelected)} w-full md:max-w-[calc(50%-0.75rem)]`}
+        >
           <CardHeader className="pb-3">
             <CardTitle className={getPanelTitleClass(hasIndicatorSelected)}>
               Sub Activities
