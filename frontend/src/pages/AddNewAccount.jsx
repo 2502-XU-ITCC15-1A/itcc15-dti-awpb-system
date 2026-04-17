@@ -5,46 +5,57 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
-const EMPTY_FORM = {
-  username: "enc_",
-  fullName: "",
-  email: "",
-  password: "",
-  confirmPassword: "",
-  role: "encoder",
+// USER MANAGEMENT: Initial form state for creating new users
+// Default role is 'encoder' with proper username prefix
+const EMPTY_FORM = { 
+  username: "enc_",          // Username prefix for encoder role
+  fullName: "",              // User's full name for display
+  email: "",                 // Email address for login
+  password: "",              // Plain text password (will be hashed)
+  confirmPassword: "",       // Password confirmation field
+  role: "encoder",           // Default user role (encoder/admin)
 };
 
+// USER MANAGEMENT: Component for creating new user accounts
+// Handles form validation, user creation, and navigation
 export default function AddNewAccount({
-  accounts = [],
-  onAddAccount,
-  onShowToast,
+  accounts = [],           // Existing accounts for validation
+  onAddAccount,           // Callback to add new account
+  onShowToast,            // Callback for success/error messages
 }) {
   const navigate = useNavigate();
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [errors, setErrors] = useState({});
+  const [form, setForm] = useState(EMPTY_FORM);     // Form state
+  const [errors, setErrors] = useState({});         // Validation errors
 
-  const handleFieldChange = (event) => {
+  // USER MANAGEMENT: Handle form field changes
+// Special logic for role field to update username prefix
+const handleFieldChange = (event) => {
     const { name, value } = event.target;
 
-    if (name === "role") {
+    // ROLE CHANGE: Update username prefix when role changes
+    if (name === "role") { 
       setForm((prev) => ({
         ...prev,
         role: value,
-        username: updateUsernamePrefix(prev.username, value),
+        username: updateUsernamePrefix(prev.username, value), // Auto-update prefix
       }));
       return;
     }
 
+    // STANDARD FIELD UPDATE: Update form state for other fields
     setForm((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleSave = () => {
+  // USER MANAGEMENT: Save new user account
+// Performs validation, creates user, and handles success/error flow
+const handleSave = () => {
     const nextErrors = {};
     const normalizedUsername = form.username.trim().toLowerCase();
 
+    // USER MANAGEMENT: Username validation
     if (!normalizedUsername) {
       nextErrors.username = "Username is required.";
     } else if (!/^(enc|adm)_[a-z0-9_]+$/.test(normalizedUsername)) {
@@ -62,20 +73,24 @@ export default function AddNewAccount({
       nextErrors.username = "This username is already assigned to another account.";
     }
 
+    // USER MANAGEMENT: Full name validation
     if (!form.fullName.trim()) {
       nextErrors.fullName = "Full name is required.";
     }
 
+    // USER MANAGEMENT: Email validation
     if (!form.email.trim()) {
       nextErrors.email = "Email is required.";
     }
 
+    // USER MANAGEMENT: Password validation
     if (!form.password) {
       nextErrors.password = "Password is required.";
     } else if (form.password.length < 8) {
       nextErrors.password = "Password must be at least 8 characters.";
     }
 
+    // USER MANAGEMENT: Password confirmation validation
     if (!form.confirmPassword) {
       nextErrors.confirmPassword = "Please confirm the password.";
     } else if (form.password !== form.confirmPassword) {
@@ -84,30 +99,35 @@ export default function AddNewAccount({
 
     setErrors(nextErrors);
 
+    // USER MANAGEMENT: If validation passes, create the user
     if (Object.keys(nextErrors).length === 0) {
       const createdName = form.fullName.trim();
 
+      // CREATE USER: Call parent callback with new user data
       onAddAccount?.({
         id:
           typeof crypto !== "undefined" && crypto.randomUUID
             ? crypto.randomUUID()
-            : String(Date.now()),
+            : String(Date.now()),  // Fallback ID generation
         username: normalizedUsername,
         fullName: form.fullName.trim(),
         email: form.email.trim(),
         role: form.role,
-        status: "active",
+        status: "active",          // New users are active by default
       });
+      
+      // SUCCESS: Show success message and navigate back
       onShowToast?.({
         title: "Account created",
         description: `${createdName} was added to All Accounts.`,
         type: "success",
       });
-      navigate("/admin/manage-accounts");
+      navigate("/admin/manage-accounts");  // Return to user management
     }
   };
 
-  const handleCancel = () => {
+  // USER MANAGEMENT: Cancel user creation and return to management
+const handleCancel = () => {
     navigate("/admin/manage-accounts");
   };
 
@@ -267,17 +287,22 @@ export default function AddNewAccount({
   );
 }
 
+// USER MANAGEMENT: Helper function to update username prefix based on role
+// Ensures usernames follow the proper format (enc_ for encoder, adm_ for admin)
 function updateUsernamePrefix(username, role) {
   const normalized = String(username || "").trim().toLowerCase();
   const nextPrefix = role === "admin" ? "adm_" : "enc_";
 
+  // EMPTY USERNAME: Return just the prefix
   if (!normalized) {
     return nextPrefix;
   }
 
+  // EXISTING PREFIX: Replace existing prefix with new one
   if (normalized.startsWith("enc_") || normalized.startsWith("adm_")) {
     return `${nextPrefix}${normalized.split("_").slice(1).join("_")}`;
   }
 
+  // NO PREFIX: Add the appropriate prefix
   return `${nextPrefix}${normalized.replace(/[^a-z0-9_]/g, "")}`;
 }
