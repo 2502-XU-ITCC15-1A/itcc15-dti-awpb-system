@@ -1,8 +1,5 @@
--- AWPB Database Schema
+-- AWPB Database Schema for Supabase
 -- Based on frontend data structures and requirements
-
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create enums
 CREATE TYPE user_role AS ENUM ('admin', 'encoder');
@@ -10,24 +7,23 @@ CREATE TYPE user_status AS ENUM ('active', 'deactivated');
 CREATE TYPE entry_status AS ENUM ('draft', 'submitted', 'Pending Review', 'Returned', 'Approved', 'Rejected');
 CREATE TYPE month_type AS ENUM ('jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec');
 
--- Users table
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    username VARCHAR(255) UNIQUE NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) CHECK (role IN ('admin', 'encoder')) NOT NULL,
-    status VARCHAR(20) CHECK (status IN ('active', 'deactivated')) DEFAULT 'active',
+-- Users table (extended from Supabase auth.users)
+CREATE TABLE profiles (
+    id UUID REFERENCES auth.users(id) PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    full_name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    role user_role NOT NULL DEFAULT 'encoder',
+    status user_status NOT NULL DEFAULT 'active',
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Units table
 CREATE TABLE units (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code VARCHAR(50) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    code TEXT UNIQUE NOT NULL,
+    name TEXT NOT NULL,
     aliases JSONB DEFAULT '[]',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -35,9 +31,9 @@ CREATE TABLE units (
 
 -- Components table
 CREATE TABLE components (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL,
-    code VARCHAR(50) UNIQUE NOT NULL,
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    name TEXT NOT NULL,
+    code TEXT UNIQUE NOT NULL,
     sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -45,10 +41,10 @@ CREATE TABLE components (
 
 -- Sub_Components table
 CREATE TABLE sub_components (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     component_id UUID NOT NULL REFERENCES components(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    code VARCHAR(50) UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    code TEXT UNIQUE NOT NULL,
     sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -56,11 +52,11 @@ CREATE TABLE sub_components (
 
 -- Key_Activities table
 CREATE TABLE key_activities (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     sub_component_id UUID NOT NULL REFERENCES sub_components(id) ON DELETE CASCADE,
-    name VARCHAR(50) NOT NULL,
-    code VARCHAR(50) UNIQUE NOT NULL,
-    activity_no INTEGER,
+    name TEXT NOT NULL,
+    code TEXT UNIQUE NOT NULL,
+    activity_no TEXT,
     performance_indicator TEXT,
     sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
@@ -69,10 +65,10 @@ CREATE TABLE key_activities (
 
 -- Sub_Activities table
 CREATE TABLE sub_activities (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     key_activity_id UUID NOT NULL REFERENCES key_activities(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    code VARCHAR(50) UNIQUE NOT NULL,
+    name TEXT NOT NULL,
+    code TEXT UNIQUE NOT NULL,
     sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -80,7 +76,7 @@ CREATE TABLE sub_activities (
 
 -- Entries table (AWPB Entries)
 CREATE TABLE entries (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     unit_id UUID NOT NULL REFERENCES units(id),
     planning_year INTEGER NOT NULL,
@@ -90,10 +86,10 @@ CREATE TABLE entries (
     sub_activity_id UUID REFERENCES sub_activities(id), -- Nullable
     title_of_activities TEXT NOT NULL,
     unit_cost DECIMAL(12,2) DEFAULT 0,
-    status entry_status DEFAULT 'approved','pending','rejected','revision',
+    status entry_status DEFAULT 'draft',
     submission_date TIMESTAMPTZ,
     review_date TIMESTAMPTZ,
-    reviewer_id UUID REFERENCES users(id), -- Nullable
+    reviewer_id UUID REFERENCES profiles(id), -- Nullable
     reviewer_notes TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -101,7 +97,7 @@ CREATE TABLE entries (
 
 -- Monthly_Targets table
 CREATE TABLE monthly_targets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     entry_id UUID NOT NULL REFERENCES entries(id) ON DELETE CASCADE,
     month month_type NOT NULL,
     target_quantity DECIMAL(10,2) DEFAULT 0,
@@ -112,7 +108,7 @@ CREATE TABLE monthly_targets (
 
 -- Submission_Windows table
 CREATE TABLE submission_windows (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title TEXT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
@@ -121,9 +117,9 @@ CREATE TABLE submission_windows (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_status ON users(status);
+CREATE INDEX idx_profiles_username ON profiles(username);
+CREATE INDEX idx_profiles_role ON profiles(role);
+CREATE INDEX idx_profiles_status ON profiles(status);
 CREATE INDEX idx_units_code ON units(code);
 CREATE INDEX idx_components_code ON components(code);
 CREATE INDEX idx_sub_components_component_id ON sub_components(component_id);
@@ -150,7 +146,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_entries_updated_at BEFORE UPDATE ON entries
@@ -173,11 +169,6 @@ INSERT INTO components (name, code, sort_order) VALUES
 ('COMPONENT 2: PROJECT MANAGEMENT', 'COMPONENT_2', 2),
 ('COMPONENT 3: CAPACITY BUILDING', 'COMPONENT_3', 3),
 ('COMPONENT 4: INNOVATIVE FINANCING', 'COMPONENT_4', 4);
-
--- Default users (password: password123)
-INSERT INTO users (username, full_name, email, password_hash, role, status) VALUES
-('enc_user', 'Default Encoder', 'encoder@dti.gov.ph', '$2b$10$rQZ8ZHWKZQZQZQZQZQZQZOZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQ', 'encoder', 'active'),
-('adm_admin', 'Default Admin', 'admin@dti.gov.ph', '$2b$10$rQZ8ZHWKZQZQZQZQZQZQZOZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQZQ', 'admin', 'active');
 
 -- Default submission window
 INSERT INTO submission_windows (title, start_date, end_date, is_active) VALUES
