@@ -1,17 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import {
-  ArrowRight,
-  CalendarRange,
-  CheckCircle2,
-  Clock3,
-  Layers3,
-  XCircle,
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import { Search, Eye, Trash2 } from "lucide-react";
+
+import AdminEntryReviewModal from "../components/admin/AdminEntryReviewModal";
+import AdminDeleteEntryModal from "../components/admin/AdminDeleteEntryModal";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -19,21 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const MONTHS = [
-  { key: "Jan", label: "January" },
-  { key: "Feb", label: "February" },
-  { key: "Mar", label: "March" },
-  { key: "Apr", label: "April" },
-  { key: "May", label: "May" },
-  { key: "Jun", label: "June" },
-  { key: "Jul", label: "July" },
-  { key: "Aug", label: "August" },
-  { key: "Sep", label: "September" },
-  { key: "Oct", label: "October" },
-  { key: "Nov", label: "November" },
-  { key: "Dec", label: "December" },
-];
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 function formatCurrency(value) {
   return new Intl.NumberFormat("en-PH", {
@@ -44,541 +25,367 @@ function formatCurrency(value) {
   }).format(value || 0);
 }
 
-function formatCompactCurrency(value) {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-    notation: "compact",
-    maximumFractionDigits: 2,
-  }).format(value || 0);
-}
-
-function formatDateOnly(value) {
+function formatDate(value) {
   if (!value) return "N/A";
 
-  return new Date(value).toLocaleDateString("en-PH", {
+  return new Date(value).toLocaleString("en-PH", {
     year: "numeric",
-    month: "long",
+    month: "short",
     day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 }
 
-function isSubmissionWindowOpen(submissionWindow) {
-  const { startDate, endDate } = submissionWindow || {};
-
-  if (!startDate || !endDate) return false;
-
-  const today = new Date();
-  const start = new Date(`${startDate}T00:00:00`);
-  const end = new Date(`${endDate}T23:59:59`);
-
-  return today >= start && today <= end;
+function getStatusBadgeVariant(status) {
+  switch (status) {
+    case "Pending Review":
+      return "statusPending";
+    case "Returned":
+      return "statusReturned";
+    case "Approved":
+      return "statusApproved";
+    case "Rejected":
+      return "statusRejected";
+    default:
+      return "outline";
+  }
 }
 
-function StatCard({
-  title,
-  value,
-  icon: Icon,
-  caption,
-  highlight = false,
-}) {
-  return (
-    <Card
-      className={
-        highlight
-          ? "border-0 bg-gradient-to-br from-[#1f2f74] via-[#243b86] to-[#2a4694] text-white shadow-[0_12px_28px_rgba(31,47,116,0.24)]"
-          : "border-0 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)]"
-      }
-    >
-      <CardContent className="flex items-start justify-between p-5">
-        <div>
-          <p
-            className={`text-sm ${
-              highlight ? "text-white/75" : "text-slate-500"
-            }`}
-          >
-            {title}
-          </p>
-          <h2 className="mt-3 text-4xl font-bold">{value}</h2>
-          <p
-            className={`mt-2 text-xs ${
-              highlight ? "text-white/75" : "text-slate-500"
-            }`}
-          >
-            {caption}
-          </p>
-        </div>
-
-        <div
-          className={`rounded-2xl p-3 ${
-            highlight ? "bg-white/18 text-white" : "bg-slate-100 text-slate-600"
-          }`}
-        >
-          <Icon size={20} />
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-export default function AdminDashboard({
+export default function AdminReview({
   entries = [],
-  submissionWindow,
-  onUpdateSubmissionWindow,
+  onUpdateEntry,
+  onDeleteEntry,
+  onShowToast,
 }) {
-  const windowOpen = isSubmissionWindowOpen(submissionWindow);
-  const currentYear = String(new Date().getFullYear());
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [unitFilter, setUnitFilter] = useState("all");
+  const [yearFilter, setYearFilter] = useState("all");
+
+  const availableUnits = useMemo(() => {
+    return [...new Set(entries.map((entry) => entry.unit).filter(Boolean))].sort();
+  }, [entries]);
 
   const availableYears = useMemo(() => {
-    const years = [
-      ...new Set(entries.map((entry) => String(entry.planningYear)).filter(Boolean)),
-    ].sort((a, b) => String(b).localeCompare(String(a)));
+    return [...new Set(entries.map((entry) => entry.planningYear).filter(Boolean))]
+      .sort((a, b) => String(b).localeCompare(String(a)));
+  }, [entries]);
 
-    if (years.length === 0) {
-      return [currentYear];
-    }
+  const filteredEntries = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
 
-    return years;
-  }, [currentYear, entries]);
+    return entries.filter((entry) => {
+      const matchesSearch =
+        normalizedSearch === "" ||
+        entry.titleOfActivities?.toLowerCase().includes(normalizedSearch) ||
+        entry.performanceIndicator?.toLowerCase().includes(normalizedSearch) ||
+        entry.subActivity?.toLowerCase().includes(normalizedSearch) ||
+        entry.unit?.toLowerCase().includes(normalizedSearch);
 
-  const [selectedYear, setSelectedYear] = useState(() =>
-    availableYears.includes(currentYear) ? currentYear : availableYears[0],
-  );
+      const matchesStatus =
+        statusFilter === "all" || entry.status === statusFilter;
 
-  useEffect(() => {
-    if (!availableYears.includes(selectedYear)) {
-      setSelectedYear(
-        availableYears.includes(currentYear) ? currentYear : availableYears[0],
-      );
-    }
-  }, [availableYears, currentYear, selectedYear]);
+      const matchesUnit = unitFilter === "all" || entry.unit === unitFilter;
 
-  const yearEntries = useMemo(() => {
-    return entries.filter(
-      (entry) => String(entry.planningYear || "") === String(selectedYear),
-    );
-  }, [entries, selectedYear]);
+      const matchesYear =
+        yearFilter === "all" || String(entry.planningYear) === yearFilter;
 
-  const stats = useMemo(() => {
-    return {
-      total: yearEntries.length,
-      pending: yearEntries.filter((entry) => entry.status === "Pending Review")
-        .length,
-      returned: yearEntries.filter((entry) => entry.status === "Returned")
-        .length,
-      rejected: yearEntries.filter((entry) => entry.status === "Rejected")
-        .length,
-      approved: yearEntries.filter((entry) => entry.status === "Approved")
-        .length,
-    };
-  }, [yearEntries]);
+      return matchesSearch && matchesStatus && matchesUnit && matchesYear;
+    });
+  }, [entries, searchTerm, statusFilter, unitFilter, yearFilter]);
 
-  const approvedEntries = useMemo(() => {
-    return yearEntries.filter((entry) => entry.status === "Approved");
-  }, [yearEntries]);
+  const handleApprove = (note) => {
+    if (!selectedEntry) return;
 
-  const approvedBudget = useMemo(() => {
-    return approvedEntries.reduce(
-      (sum, entry) => sum + Number(entry.grandTotal || 0),
-      0,
-    );
-  }, [approvedEntries]);
-
-  const approvedMonthlyBudget = useMemo(() => {
-    const totals = MONTHS.map((month) => ({
-      ...month,
-      amount: 0,
-    }));
-
-    approvedEntries.forEach((entry) => {
-      entry.monthlyBreakdown?.forEach((item) => {
-        const monthIndex = MONTHS.findIndex((month) => month.key === item.month);
-        if (monthIndex >= 0) {
-          totals[monthIndex].amount += Number(item.amount || 0);
-        }
-      });
+    const entryTitle = selectedEntry.titleOfActivities;
+    onUpdateEntry(selectedEntry.id, {
+      status: "Approved",
+      adminComment: note || "",
+      reviewedAt: new Date().toISOString(),
     });
 
-    return totals;
-  }, [approvedEntries]);
+    onShowToast?.({
+      title: "Entry approved",
+      description: `${entryTitle} was approved successfully.`,
+      type: "success",
+    });
 
-  const unitBudget = useMemo(() => {
-    const totalsByUnit = approvedEntries.reduce((acc, entry) => {
-      const unitKey = entry.unit || "Unassigned";
+    setSelectedEntry(null);
+  };
 
-      if (!acc[unitKey]) {
-        acc[unitKey] = {
-          unit: unitKey,
-          amount: 0,
-          entries: 0,
-        };
-      }
+  const handleReturn = (note) => {
+    if (!selectedEntry) return;
 
-      acc[unitKey].amount += Number(entry.grandTotal || 0);
-      acc[unitKey].entries += 1;
+    const entryTitle = selectedEntry.titleOfActivities;
+    onUpdateEntry(selectedEntry.id, {
+      status: "Returned",
+      adminComment: note,
+      reviewedAt: new Date().toISOString(),
+    });
 
-      return acc;
-    }, {});
+    onShowToast?.({
+      title: "Entry returned",
+      description: `${entryTitle} was returned for revision.`,
+      type: "success",
+    });
 
-    return Object.values(totalsByUnit).sort((a, b) => b.amount - a.amount);
-  }, [approvedEntries]);
+    setSelectedEntry(null);
+  };
 
-  const pendingEntries = useMemo(() => {
-    return yearEntries
-      .filter((entry) => entry.status === "Pending Review")
-      .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
-      .slice(0, 5);
-  }, [yearEntries]);
+  const handleReject = (note) => {
+    if (!selectedEntry) return;
 
-  const maxUnitAmount = Math.max(...unitBudget.map((item) => item.amount), 1);
+    const entryTitle = selectedEntry.titleOfActivities;
+    onUpdateEntry(selectedEntry.id, {
+      status: "Rejected",
+      adminComment: note,
+      reviewedAt: new Date().toISOString(),
+    });
+
+    onShowToast?.({
+      title: "Entry rejected",
+      description: `${entryTitle} was rejected.`,
+      type: "success",
+    });
+
+    setSelectedEntry(null);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setUnitFilter("all");
+    setYearFilter("all");
+  };
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+
+    const entryTitle = deleteTarget.titleOfActivities;
+
+    onDeleteEntry?.(deleteTarget.id);
+    onShowToast?.({
+      title: "Entry deleted",
+      description: `${entryTitle} was removed successfully.`,
+      type: "success",
+    });
+
+    if (selectedEntry?.id === deleteTarget.id) {
+      setSelectedEntry(null);
+    }
+
+    setDeleteTarget(null);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Admin Dashboard
-          </h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Monitor workflow volume and budget movement across submitted AWPB
-            entries.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-[140px] border-0 bg-white shadow-[0_3px_10px_rgba(15,23,42,0.08)]">
-              <SelectValue placeholder="Year" />
-            </SelectTrigger>
-            <SelectContent>
-              {availableYears.map((year) => (
-                <SelectItem key={year} value={year}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
-            asChild
-            className="border-0 bg-gradient-to-r from-[#1f2f74] to-[#2a4694] text-white shadow-[0_6px_16px_rgba(31,47,116,0.28)] transition-all duration-200 hover:from-[#19265f] hover:to-[#213a80] hover:shadow-[0_10px_24px_rgba(31,47,116,0.38)]"
-          >
-            <Link to="/admin/review">
-              Go to Admin Review
-              <ArrowRight size={16} />
-            </Link>
-          </Button>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+          Admin Review
+        </h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Review submitted AWPB entries and update their status.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card className="border-0 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-          <CardHeader>
-            <CardTitle className="text-lg">Submission Period Settings</CardTitle>
-            <p className="text-sm text-slate-500">
-              Control when encoders can submit or revise entries.
-            </p>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            <div
-              className={`rounded-2xl p-4 ${
-                windowOpen ? "bg-emerald-50 text-emerald-900" : "bg-rose-50 text-rose-900"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`rounded-2xl p-3 ${
-                      windowOpen
-                        ? "bg-emerald-100 text-emerald-700"
-                        : "bg-rose-100 text-rose-700"
-                    }`}
-                  >
-                    <CalendarRange size={18} />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold">
-                      Current status: {windowOpen ? "Open for submission" : "Closed"}
-                    </p>
-                    <p className="mt-1 text-xs opacity-80">
-                      {formatDateOnly(submissionWindow?.startDate)} to{" "}
-                      {formatDateOnly(submissionWindow?.endDate)}
-                    </p>
-                  </div>
-                </div>
-
-                <Badge
-                  variant="outline"
-                  className={
-                    windowOpen
-                      ? "border-emerald-200 bg-white/70 text-emerald-700"
-                      : "border-rose-200 bg-white/70 text-rose-700"
-                  }
-                >
-                  {windowOpen ? "Open" : "Closed"}
-                </Badge>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Start Date
-                </label>
-                <input
-                  type="date"
-                  value={submissionWindow?.startDate || ""}
-                  onChange={(e) =>
-                    onUpdateSubmissionWindow((prev) => ({
-                      ...prev,
-                      startDate: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  value={submissionWindow?.endDate || ""}
-                  onChange={(e) =>
-                    onUpdateSubmissionWindow((prev) => ({
-                      ...prev,
-                      endDate: e.target.value,
-                    }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm outline-none transition focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
-                />
-              </div>
-            </div>
-
-          </CardContent>
-        </Card>
-
-        <Card
-          className={`border-0 shadow-[0_12px_28px_rgba(15,23,42,0.12)] ${
-            windowOpen
-              ? "bg-gradient-to-br from-[#6ea3a6] via-[#4f8f93] to-[#2f7f86]"
-              : "bg-gradient-to-br from-[#f9d1d1] via-[#f5bcbc] to-[#ef9f9f]"
-          }`}
-        >
-          <CardContent className="p-4 md:p-5">
-            <div className="flex h-full flex-col justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <div
-                  className={`rounded-2xl p-3 ${
-                    windowOpen ? "bg-white/20 text-white" : "bg-white/50 text-rose-900"
-                  }`}
-                >
-                  <CalendarRange size={20} />
-                </div>
-
-                <div>
-                  <p
-                    className={`text-base font-semibold ${
-                      windowOpen ? "text-white" : "text-rose-900"
-                    }`}
-                  >
-                    Encoding Period {windowOpen ? "Open" : "Closed"}
-                  </p>
-                  <p
-                    className={`text-sm ${
-                      windowOpen ? "text-white/90" : "text-rose-800"
-                    }`}
-                  >
-                    {formatDateOnly(submissionWindow?.startDate)} to{" "}
-                    {formatDateOnly(submissionWindow?.endDate)}
-                  </p>
-                </div>
-              </div>
-
-              <p
-                className={`text-sm ${
-                  windowOpen ? "text-white/85" : "text-rose-800"
-                }`}
-              >
-                Admins can update the submission window at any time using the
-                settings panel.
+      <Card className="overflow-hidden border-0 shadow-[0_10px_24px_rgba(15,23,42,0.08)] gap-0 py-0">
+        <CardHeader className="border-b bg-white px-6 pt-5 pb-4">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div>
+              <CardTitle className="text-2xl">All Submitted Entries</CardTitle>
+              <p className="mt-1 text-sm text-slate-500">
+                Search and filter submissions for admin review.
+              </p>
+              <p className="mt-6 text-sm text-slate-500">
+                Showing {filteredEntries.length} of {entries.length} entries
               </p>
             </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="Total Entries"
-          value={stats.total}
-          icon={Layers3}
-          caption={`All submissions recorded for ${selectedYear}`}
-          highlight
-        />
-        <StatCard
-          title="Pending Review"
-          value={stats.pending}
-          icon={Clock3}
-          caption="Entries waiting for admin action"
-        />
-        <StatCard
-          title="Approved"
-          value={stats.approved}
-          icon={CheckCircle2}
-          caption="Locked entries cleared for final use"
-        />
-        <StatCard
-          title="Returned / Rejected"
-          value={stats.returned + stats.rejected}
-          icon={XCircle}
-          caption="Entries that still need correction or disposition"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-        <Card className="border-0 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-          <CardHeader>
-            <CardTitle className="text-lg">Budget by Unit</CardTitle>
-            <p className="text-sm text-slate-500">
-              Compare approved budget totals across implementing units for{" "}
-              {selectedYear}.
-            </p>
-          </CardHeader>
-
-          <CardContent>
-            {unitBudget.length === 0 ? (
-              <div className="rounded-2xl border border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-                No approved unit budget data available for this year yet.
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap xl:justify-end">
+              <div className="relative w-full sm:min-w-[300px] sm:flex-1 xl:max-w-[340px]">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search title, sub activity, or unit"
+                  className="pl-9"
+                />
               </div>
-            ) : (
-              <div className="space-y-3">
-                {unitBudget.map((item) => (
-                  <div
-                    key={item.unit}
-                    className="rounded-2xl border border-slate-200/90 bg-slate-50 p-4 shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
-                  >
-                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                      <div>
-                        <p className="font-semibold text-slate-900">{item.unit}</p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {item.entries} entr{item.entries === 1 ? "y" : "ies"}
-                        </p>
-                      </div>
 
-                      <p className="text-sm font-semibold text-slate-900">
-                        {formatCurrency(item.amount)}
-                      </p>
-                    </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[160px]">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Pending Review">Pending Review</SelectItem>
+                  <SelectItem value="Returned">Returned</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                  <SelectItem value="Approved">Approved</SelectItem>
+                </SelectContent>
+              </Select>
 
-                    <div className="mt-3 h-2 rounded-full bg-slate-200">
-                      <div
-                        className="h-2 rounded-full bg-gradient-to-r from-[#1f2f74] to-[#2a4694]"
-                        style={{
-                          width: `${Math.max(
-                            (item.amount / maxUnitAmount) * 100,
-                            item.amount > 0 ? 8 : 0,
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              <Select value={unitFilter} onValueChange={setUnitFilter}>
+                <SelectTrigger className="w-full sm:w-[140px]">
+                  <SelectValue placeholder="All Units" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Units</SelectItem>
+                  {availableUnits.map((unit) => (
+                    <SelectItem key={unit} value={unit}>
+                      {unit}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-        <Card className="border-0 bg-gradient-to-br from-[#1f2f74] via-[#243b86] to-[#2a4694] text-white shadow-[0_14px_34px_rgba(31,47,116,0.24)]">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xl">Budget Overview</CardTitle>
-            <p className="text-sm text-white/75">
-              Approved budget totals for planning year {selectedYear}.
-            </p>
-          </CardHeader>
+              <Select value={yearFilter} onValueChange={setYearFilter}>
+                <SelectTrigger className="w-full sm:w-[140px]">
+                  <SelectValue placeholder="All Years" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Years</SelectItem>
+                  {availableYears.map((year) => (
+                    <SelectItem key={year} value={String(year)}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-          <CardContent className="space-y-5">
-            <div className="rounded-2xl bg-white/12 p-4">
-              <p className="text-sm text-white/75">Approved Yearly Budget</p>
-              <h2 className="mt-2 text-3xl font-bold">{formatCurrency(approvedBudget)}</h2>
+              <Button variant="outline" onClick={clearFilters} className="w-full sm:w-auto">
+                Reset
+              </Button>
             </div>
+          </div>
+        </CardHeader>
 
-            <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
-              <div className="mb-4">
-                <p className="font-medium text-white">Approved Monthly Budget</p>
-                <p className="text-xs text-white/70">
-                  Month-by-month totals from approved entries only.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                {approvedMonthlyBudget.map((month) => (
-                  <div
-                    key={month.key}
-                    className="flex items-center justify-between gap-3 rounded-xl bg-white/8 px-3 py-2"
-                  >
-                    <div className="flex items-center justify-between gap-3 text-sm">
-                      <p className="font-medium text-white">{month.key}</p>
-                    </div>
-                    <p className="text-sm text-white/75">
-                      {formatCompactCurrency(month.amount)}
-                    </p>
-                  </div>
-                ))}
-              </div>
+        <CardContent className="p-0">
+          {filteredEntries.length === 0 ? (
+            <div className="p-6 text-sm text-slate-500">
+              No entries match the current filters.
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-[920px] w-full table-fixed border-collapse text-sm">
+                <colgroup>
+                  <col className="w-[30%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[11%]" />
+                  <col className="w-[8%]" />
+                </colgroup>
 
-      <div className="grid grid-cols-1 gap-6">
-        <Card className="border-0 bg-white shadow-[0_10px_24px_rgba(15,23,42,0.08)]">
-          <CardHeader>
-            <CardTitle className="text-lg">Pending Queue</CardTitle>
-            <p className="text-sm text-slate-500">
-              Entries awaiting review for {selectedYear}.
-            </p>
-          </CardHeader>
+                <thead className="bg-slate-50 text-left">
+                  <tr className="border-b">
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
+                      Title
+                    </th>
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
+                      Unit
+                    </th>
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
+                      Year
+                    </th>
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
+                      Submitted
+                    </th>
+                    <th className="px-4 py-2.5 font-semibold text-slate-700">
+                      Status
+                    </th>
+                    <th className="px-4 py-2.5 text-right font-semibold text-slate-700">
+                      Total
+                    </th>
+                    <th className="px-4 py-2.5 text-center font-semibold text-slate-700">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
 
-          <CardContent>
-            {pendingEntries.length === 0 ? (
-              <div className="rounded-2xl border border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-                No pending entries for this year right now.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {pendingEntries.map((entry) => (
-                  <div
-                    key={entry.id}
-                    className="rounded-2xl border border-slate-200/90 bg-slate-50 p-4 shadow-[0_4px_12px_rgba(15,23,42,0.06)]"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate font-medium text-slate-900">
+                <tbody>
+                  {filteredEntries.map((entry) => (
+                    <tr key={entry.id} className="border-b last:border-b-0">
+                      <td className="px-4 py-4">
+                        <p
+                          className="truncate font-medium text-slate-900"
+                          title={entry.titleOfActivities}
+                        >
                           {entry.titleOfActivities}
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {entry.unit} • {entry.planningYear || "N/A"}
-                        </p>
-                      </div>
+                      </td>
 
-                      <Badge variant="statusPending">Pending Review</Badge>
-                    </div>
+                      <td className="px-4 py-4 text-slate-700">{entry.unit}</td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {entry.planningYear || "N/A"}
+                      </td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {formatDate(entry.submittedAt)}
+                      </td>
 
-                    <div className="mt-3 flex items-center justify-between gap-3 text-xs text-slate-500">
-                      <span>{formatDateOnly(entry.submittedAt)}</span>
-                      <span>{formatCompactCurrency(entry.grandTotal)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                      <td className="px-4 py-4">
+                        <Badge variant={getStatusBadgeVariant(entry.status)}>
+                          {entry.status}
+                        </Badge>
+                      </td>
+
+                      <td className="px-4 py-4 text-right font-medium text-slate-900">
+                        {formatCurrency(entry.grandTotal)}
+                      </td>
+
+                      <td className="px-4 py-4 align-middle">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setSelectedEntry(entry)}
+                            title="Review entry"
+                            aria-label="Review entry"
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Eye />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            onClick={() => setDeleteTarget(entry)}
+                            title="Delete entry"
+                            aria-label="Delete entry"
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AdminEntryReviewModal
+        entry={selectedEntry}
+        onClose={() => setSelectedEntry(null)}
+        onApprove={handleApprove}
+        onReturn={handleReturn}
+        onReject={handleReject}
+      />
+
+      <AdminDeleteEntryModal
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        entry={deleteTarget}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
