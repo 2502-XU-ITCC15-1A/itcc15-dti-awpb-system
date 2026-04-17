@@ -125,3 +125,5 @@ export default function ForgotPassword({ accounts = [] }) {
     </div>
   );
 }
+
+
