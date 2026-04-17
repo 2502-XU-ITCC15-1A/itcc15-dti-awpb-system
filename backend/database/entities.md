@@ -15,9 +15,9 @@
 
 ### 2. Units
 - **id** (UUID, Primary Key)
-- **code** (Text, Unique) - RCU, BKD, LDN, MIS OR
+- **code** (Text, Unique) - RCU, BKD, LDN, MIS-OR
 - **name** (Text)
-- **aliases** (JSON array) - ["RCU"], ["BKD", "Bukidnon"]
+- **aliases** (JSON array) - ["RCU"], ["BKD"], ["LDN"], ["MIS-OR"]
 - **is_active** (Boolean)
 - **created_at** (Timestamp)
 
@@ -32,7 +32,7 @@
 ### 4. Sub_Components
 - **id** (UUID, Primary Key)
 - **component_id** (UUID, Foreign Key → Components)
-- **name** (Text) - "Sub component 1.1 Business Services"
+- **name** (Text) - "Sub component 1.1 Business Services" 
 - **code** (Text) - "SUB_COMP_1_1"
 - **sort_order** (Integer)
 - **is_active** (Boolean)
