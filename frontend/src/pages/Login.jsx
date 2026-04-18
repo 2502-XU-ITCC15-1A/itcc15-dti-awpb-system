@@ -2,7 +2,6 @@ import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Eye, EyeOff } from "lucide-react"
 import logo from "../assets/logo.png"
-import { authService } from "../services/supabaseService"
 
 export default function Login({ onLogin, accounts = [] }) {
     const [showPassword, setShowPassword] = useState(false)
@@ -20,7 +19,7 @@ export default function Login({ onLogin, accounts = [] }) {
         }))
     }
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault()
 
         if (!formData.username.trim() || !formData.password.trim()) {
@@ -28,32 +27,27 @@ export default function Login({ onLogin, accounts = [] }) {
             return
         }
 
-        setError("")
-        
-        try {
-            // Use email as username for Supabase auth
-            const email = formData.username.includes('@') 
-                ? formData.username.trim() 
-                : `${formData.username.trim()}@dti.gov.ph`
-            
-            const { user, session } = await authService.signIn(email, formData.password)
-            
-            // Get user profile to get role
-            const profile = await authService.getProfile(user.id)
-            
-            onLogin({
-                id: user.id,
-                username: profile.username,
-                email: profile.email,
-                fullName: profile.full_name,
-                role: profile.role,
-                status: profile.status
-            })
-            
-        } catch (error) {
-            setError("Invalid username or password.")
-            console.error('Login error:', error)
+        const normalizedUsername = formData.username.trim().toLowerCase()
+        const matchedAccount = accounts.find(
+            (account) => account.username === normalizedUsername
+        )
+
+        if (!matchedAccount) {
+            setError("This username is not in the current account list.")
+            return
         }
+
+        if (matchedAccount.status !== "active") {
+            setError("This account is deactivated and cannot sign in.")
+            return
+        }
+
+        setError("")
+
+        onLogin({
+            username: normalizedUsername,
+            role: matchedAccount.role,
+        })
     }
 
     return (

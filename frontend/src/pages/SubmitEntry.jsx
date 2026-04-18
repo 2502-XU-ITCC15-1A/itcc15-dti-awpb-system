@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { supabase } from '../lib/supabase';
 
 const FALLBACK_VALUE = "N/A";
 
@@ -775,6 +774,7 @@ export default function SubmitEntry({
                     </p>
                   )}
                 </div>
+
                 <div>
                   <label className="mb-2 block text-sm font-medium">No.</label>
                   <select
@@ -820,6 +820,7 @@ export default function SubmitEntry({
                     </p>
                   )}
                 </div>
+
                 <div>
                   <label className="mb-2 block text-sm font-medium">
                     Sub Activity
