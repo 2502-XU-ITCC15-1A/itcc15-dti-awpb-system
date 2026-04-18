@@ -1,19 +1,19 @@
 -- AWPB Database Schema - Matching Frontend Data Structures
 
--- Users table (matches frontend account structure)
+-- 1. Users table (matches frontend account structure)
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    username TEXT UNIQUE NOT NULL,
-    full_name TEXT NOT NULL,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    role TEXT NOT NULL CHECK (role IN ('admin', 'encoder')),
-    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'deactivated')),
+    username VARCHAR(50) UNIQUE NOT NULL,
+    full_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL, --NEVER STORE RAW PASSWORDS!
+    role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'encoder')),
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'deactivated')),
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Entries table (matching frontend entry structure with monthly targets)
+-- 2. Entries table (matching frontend entry structure with monthly targets)
 CREATE TABLE IF NOT EXISTS entries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -22,11 +22,13 @@ CREATE TABLE IF NOT EXISTS entries (
     component TEXT NOT NULL,
     sub_component TEXT NOT NULL,
     key_activity TEXT NOT NULL,
+
     no TEXT, -- Activity number
     performance_indicator TEXT,
     sub_activity TEXT,
     title_of_activities TEXT NOT NULL,
     unit_cost DECIMAL(12,2),
+
     -- Monthly targets
     targets_jan DECIMAL(10,2) DEFAULT 0,
     targets_feb DECIMAL(10,2) DEFAULT 0,
@@ -76,8 +78,8 @@ CREATE TABLE IF NOT EXISTS unit_options (
 
 -- Submission windows table
 CREATE TABLE IF NOT EXISTS submission_windows (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(), --Auto-generate unique ID
+    title TEXT NOT NULL, 
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     is_active BOOLEAN DEFAULT true,
@@ -93,9 +95,9 @@ ON CONFLICT (username) DO NOTHING;
 -- Insert unit options (from frontend data)
 INSERT INTO unit_options (value, aliases) VALUES
 ('RCU', '["RCU"]'),
-('BKD', '["BKD", "BKD", "Bukidnon"]'),
+('BKD', '["BKD", "Bukidnon"]'),
 ('LDN', '["LDN", "Lanao del Norte"]'),
-('MIS OR', '["MIS OR", "MOR", "Misamis Oriental"]')
+('MISOR', '["MOR", "Misamis Oriental"]')
 ON CONFLICT (value) DO NOTHING;
 
 -- Insert default submission window
