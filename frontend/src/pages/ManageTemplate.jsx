@@ -794,7 +794,7 @@ export default function ManageTemplate({
                               </button>
                               <button
                                 type="button"
-                                onClick={() => setComponentDeleteTarget(name)}
+                                onClick={() => setDeleteTarget({ kind: "component", label: name })}
                                   className={deleteActionIconButtonClass}
                                   aria-label="Delete component"
                                 >

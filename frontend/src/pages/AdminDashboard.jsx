@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -258,6 +260,91 @@ export default function AdminDashboard({
               ))}
             </SelectContent>
           </Select>
+
+          <Button
+            onClick={() => {
+              const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+              const pageW = doc.internal.pageSize.getWidth();
+              const now = new Date().toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
+
+              // Header
+              doc.setFontSize(16).setFont("helvetica", "bold");
+              doc.text("DTI – AWPB Entry Report", pageW / 2, 40, { align: "center" });
+              doc.setFontSize(9).setFont("helvetica", "normal");
+              doc.text(`Planning Year: ${selectedYear}   |   Generated: ${now}`, pageW / 2, 56, { align: "center" });
+
+              // Summary stats
+              doc.setFontSize(10).setFont("helvetica", "bold");
+              doc.text("Summary", 40, 80);
+              autoTable(doc, {
+                startY: 88,
+                head: [["Total", "Pending", "Approved", "Returned / Rejected", "Approved Budget"]],
+                body: [[
+                  stats.total,
+                  stats.pending,
+                  stats.approved,
+                  stats.returned + stats.rejected,
+                  formatCurrency(approvedBudget),
+                ]],
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [31, 47, 116] },
+                margin: { left: 40, right: 40 },
+              });
+
+              // Budget by unit
+              if (unitBudget.length > 0) {
+                doc.setFontSize(10).setFont("helvetica", "bold");
+                doc.text("Budget by Unit", 40, doc.lastAutoTable.finalY + 20);
+                autoTable(doc, {
+                  startY: doc.lastAutoTable.finalY + 28,
+                  head: [["Unit", "Entries", "Approved Budget"]],
+                  body: unitBudget.map((u) => [u.unit, u.entries, formatCurrency(u.amount)]),
+                  styles: { fontSize: 9 },
+                  headStyles: { fillColor: [31, 47, 116] },
+                  margin: { left: 40, right: 40 },
+                });
+              }
+
+              // Monthly budget
+              doc.setFontSize(10).setFont("helvetica", "bold");
+              doc.text("Approved Monthly Budget", 40, doc.lastAutoTable.finalY + 20);
+              autoTable(doc, {
+                startY: doc.lastAutoTable.finalY + 28,
+                head: [approvedMonthlyBudget.map((m) => m.label)],
+                body: [approvedMonthlyBudget.map((m) => formatCurrency(m.amount))],
+                styles: { fontSize: 8 },
+                headStyles: { fillColor: [31, 47, 116] },
+                margin: { left: 40, right: 40 },
+              });
+
+              // Entries table
+              if (yearEntries.length > 0) {
+                doc.addPage();
+                doc.setFontSize(10).setFont("helvetica", "bold");
+                doc.text(`All Entries – ${selectedYear}`, 40, 40);
+                autoTable(doc, {
+                  startY: 50,
+                  head: [["Title of Activities", "Unit", "Status", "Grand Total", "Submitted"]],
+                  body: yearEntries.map((e) => [
+                    e.titleOfActivities || "—",
+                    e.unit || "—",
+                    e.status || "—",
+                    formatCurrency(e.grandTotal),
+                    e.submittedAt ? new Date(e.submittedAt).toLocaleDateString("en-PH") : "—",
+                  ]),
+                  styles: { fontSize: 8, overflow: "linebreak" },
+                  headStyles: { fillColor: [31, 47, 116] },
+                  columnStyles: { 0: { cellWidth: 220 } },
+                  margin: { left: 40, right: 40 },
+                });
+              }
+
+              doc.save(`AWPB-Report-${selectedYear}.pdf`);
+            }}
+            className="border-0 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-[0_6px_16px_rgba(16,185,129,0.28)] transition-all duration-200 hover:from-emerald-700 hover:to-emerald-800"
+          >
+            Download PDF Report
+          </Button>
 
           <Button
             asChild

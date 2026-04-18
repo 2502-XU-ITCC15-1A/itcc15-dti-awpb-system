@@ -4,7 +4,7 @@ import { Eye, EyeOff } from "lucide-react"
 import logo from "../assets/logo.png"
 import { authService } from "../services/supabaseService"
 
-export default function Login({ onLogin, accounts = [] }) {
+export default function Login({ onLogin }) {
     const [showPassword, setShowPassword] = useState(false)
     const [formData, setFormData] = useState({
         username: "",
@@ -36,7 +36,7 @@ export default function Login({ onLogin, accounts = [] }) {
                 ? formData.username.trim() 
                 : `${formData.username.trim()}@dti.gov.ph`
             
-            const { user, session } = await authService.signIn(email, formData.password)
+            const { user } = await authService.signIn(email, formData.password)
             
             // Get user profile to get role
             const profile = await authService.getProfile(user.id)
@@ -51,7 +51,14 @@ export default function Login({ onLogin, accounts = [] }) {
             })
             
         } catch (error) {
-            setError("Invalid username or password.")
+            const msg = error?.message || "";
+            if (msg.toLowerCase().includes("invalid") || msg.toLowerCase().includes("credentials")) {
+                setError("Invalid username or password.")
+            } else if (msg.toLowerCase().includes("network") || msg.toLowerCase().includes("fetch")) {
+                setError("Connection error. Please check your internet and try again.")
+            } else {
+                setError("Something went wrong. Please try again.")
+            }
             console.error('Login error:', error)
         }
     }

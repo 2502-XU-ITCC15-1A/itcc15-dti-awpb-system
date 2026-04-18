@@ -8,7 +8,7 @@ This guide will help you migrate from the custom Express backend to Supabase.
 - Node.js installed
 - Git repository access
 
-## Step 1: Create Supabase Project
+## Step 1:  Supabase Project
 
 1. Go to [https://supabase.com](https://supabase.com)
 2. Sign up/login to your account
