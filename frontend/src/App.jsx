@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import initialTemplateData from "./data/awpb_dropdown_tree.json";
+import { supabase } from "./lib/supabase";
+import { authService, awbpEntriesService, submissionService } from "./services/supabaseService";
 
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -43,6 +45,7 @@ function App() {
   const [submitEntryDraft, setSubmitEntryDraft] = useState(null);
   const [accounts, setAccounts] = useState(INITIAL_ACCOUNTS);
   const [templateData, setTemplateData] = useState(createInitialTemplateState);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const [submissionWindow, setSubmissionWindow] = useState({
     startDate: "2026-04-01",
@@ -58,27 +61,89 @@ function App() {
   const currentRole = authUser?.role || null;
   const encoderEntries = useMemo(() => {
     if (!authUser?.id) return [];
-
     return entries.filter((entry) => entry.ownerId === authUser.id);
   }, [authUser?.id, entries]);
 
+  // Restore session on page load and listen for auth changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        authService.getProfile(session.user.id)
+          .then((profile) => {
+            setAuthUser({
+              id: profile.id,
+              username: profile.username,
+              role: profile.role,
+              fullName: profile.full_name,
+              status: profile.status,
+            });
+          })
+          .catch(() => {})
+          .finally(() => setAuthLoading(false));
+      } else {
+        setAuthLoading(false);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        setAuthUser(null);
+        setEntries([]);
+        setEntryBeingEdited(null);
+        setSubmitEntryDraft(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load entries from Supabase whenever user logs in
+  useEffect(() => {
+    if (!authUser?.id) {
+      setEntries([]);
+      return;
+    }
+    awbpEntriesService.getAll()
+      .then(setEntries)
+      .catch(console.error);
+  }, [authUser?.id]);
+
+  // Load submission window from Supabase
+  useEffect(() => {
+    submissionService.getActiveWindow()
+      .then((window) => {
+        if (window) {
+          setSubmissionWindow({
+            startDate: window.start_date,
+            endDate: window.end_date,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Cleanup toast timers
+  useEffect(() => {
+    return () => {
+      window.clearTimeout(toastTimeoutRef.current);
+      window.clearTimeout(toastDismissRef.current);
+    };
+  }, []);
+
   const handleLogin = (user) => {
-    const matchedAccount = accounts.find(
-      (account) => account.username === user.username,
-    );
-
-    if (!matchedAccount) return;
-
     setAuthUser({
-      id: matchedAccount.id,
-      username: matchedAccount.username,
-      role: matchedAccount.role,
-      fullName: matchedAccount.fullName || matchedAccount.username,
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      fullName: user.fullName || user.username,
+      status: user.status,
     });
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try { await authService.signOut(); } catch (_) {}
     setAuthUser(null);
+    setEntries([]);
     setEntryBeingEdited(null);
     setSubmitEntryDraft(null);
   };
@@ -96,14 +161,8 @@ function App() {
 
   const dismissToast = (toastId) => {
     setToast((current) => {
-      if (!current || current.id !== toastId || current.exiting) {
-        return current;
-      }
-
-      return {
-        ...current,
-        exiting: true,
-      };
+      if (!current || current.id !== toastId || current.exiting) return current;
+      return { ...current, exiting: true };
     });
 
     window.clearTimeout(toastDismissRef.current);
@@ -112,40 +171,64 @@ function App() {
     }, 220);
   };
 
-  const handleAddEntry = (newEntry) => {
+  const handleAddEntry = async (newEntry) => {
+    // Optimistic update
     setEntries((prev) => [newEntry, ...prev]);
+    try {
+      await awbpEntriesService.create(newEntry);
+      const fresh = await awbpEntriesService.getAll();
+      setEntries(fresh);
+    } catch (error) {
+      console.error("Failed to save entry:", error);
+      setEntries((prev) => prev.filter((e) => e.id !== newEntry.id));
+      showToast({ title: "Failed to save entry. Please try again.", type: "error" });
+    }
   };
 
-  const handleUpdateEntry = (entryId, updates) => {
+  const handleUpdateEntry = async (entryId, updates) => {
     setEntries((prev) =>
-      prev.map((entry) =>
-        entry.id === entryId ? { ...entry, ...updates } : entry,
-      ),
+      prev.map((entry) => entry.id === entryId ? { ...entry, ...updates } : entry)
     );
+    try {
+      await awbpEntriesService.update(entryId, updates);
+    } catch (error) {
+      console.error("Failed to update entry:", error);
+      const fresh = await awbpEntriesService.getAll().catch(() => null);
+      if (fresh) setEntries(fresh);
+    }
   };
 
-  const handleDeleteEntry = (entryId) => {
+  const handleDeleteEntry = async (entryId) => {
     setEntries((prev) => prev.filter((entry) => entry.id !== entryId));
+    try {
+      await awbpEntriesService.delete(entryId);
+    } catch (error) {
+      console.error("Failed to delete entry:", error);
+      const fresh = await awbpEntriesService.getAll().catch(() => null);
+      if (fresh) setEntries(fresh);
+    }
   };
 
   const handleStartEdit = (entry) => {
     setEntryBeingEdited(entry);
   };
 
-  const handleSaveEditedEntry = (entryId, updatedEntry) => {
+  const handleSaveEditedEntry = async (entryId, updatedEntry) => {
     setEntries((prev) =>
-      prev.map((entry) => (entry.id === entryId ? updatedEntry : entry)),
+      prev.map((entry) => (entry.id === entryId ? updatedEntry : entry))
     );
     setEntryBeingEdited(null);
+    try {
+      await awbpEntriesService.update(entryId, updatedEntry);
+      const fresh = await awbpEntriesService.getAll();
+      setEntries(fresh);
+    } catch (error) {
+      console.error("Failed to update entry:", error);
+    }
   };
 
-  const clearEditingEntry = () => {
-    setEntryBeingEdited(null);
-  };
-
-  const clearSubmitEntryDraft = () => {
-    setSubmitEntryDraft(null);
-  };
+  const clearEditingEntry = () => setEntryBeingEdited(null);
+  const clearSubmitEntryDraft = () => setSubmitEntryDraft(null);
 
   const handleAddAccount = (newAccount) => {
     setAccounts((prev) => [newAccount, ...prev]);
@@ -154,51 +237,10 @@ function App() {
   const handleUpdateAccount = (accountId, updates) => {
     setAccounts((prev) =>
       prev.map((account) =>
-        account.id === accountId ? { ...account, ...updates } : account,
-      ),
+        account.id === accountId ? { ...account, ...updates } : account
+      )
     );
   };
-
-  useEffect(() => {
-    if (!authUser?.id) return;
-
-    const matchedAccount = accounts.find((account) => account.id === authUser.id);
-
-    if (!matchedAccount || matchedAccount.status !== "active") {
-      setAuthUser(null);
-      setEntryBeingEdited(null);
-      setSubmitEntryDraft(null);
-      return;
-    }
-
-    setAuthUser((prev) => {
-      if (!prev) return prev;
-
-      const nextUser = {
-        ...prev,
-        username: matchedAccount.username,
-        role: matchedAccount.role,
-        fullName: matchedAccount.fullName || matchedAccount.username,
-      };
-
-      if (
-        prev.username === nextUser.username &&
-        prev.role === nextUser.role &&
-        prev.fullName === nextUser.fullName
-      ) {
-        return prev;
-      }
-
-      return nextUser;
-    });
-  }, [accounts, authUser?.id]);
-
-  useEffect(() => {
-    return () => {
-      window.clearTimeout(toastTimeoutRef.current);
-      window.clearTimeout(toastDismissRef.current);
-    };
-  }, []);
 
   const navItems = useMemo(() => {
     if (currentRole === "admin") {
@@ -214,31 +256,23 @@ function App() {
             { to: "/admin/manage-accounts/new", label: "Add New Account" },
           ],
         },
-      ]
+      ];
     }
-
     return [
       { to: "/", label: "Home", icon: "dashboard" },
       { to: "/entries", label: "My Entries", icon: "entries" },
       { to: "/submit", label: "Submit Entry", icon: "submit" },
-    ]
-  }, [currentRole])
+    ];
+  }, [currentRole]);
+
+  if (authLoading) return null;
 
   if (!isAuthenticated) {
     return (
       <Routes>
-        <Route
-          path="/login"
-          element={<Login onLogin={handleLogin} accounts={accounts} />}
-        />
-        <Route
-          path="/forgot-password"
-          element={<ForgotPassword accounts={accounts} />}
-        />
-        <Route
-          path="*"
-          element={<Navigate to="/login" replace />}
-        />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/forgot-password" element={<ForgotPassword accounts={accounts} />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     );
   }
@@ -250,163 +284,83 @@ function App() {
       currentUser={authUser}
       onLogout={handleLogout}
       toast={toast}
-      onDismissToast={() => {
-        if (toast?.id) {
-          dismissToast(toast.id);
-        }
-      }}
+      onDismissToast={() => { if (toast?.id) dismissToast(toast.id); }}
     >
       <Routes>
-        <Route
-          path="/login"
-          element={
-            <Navigate
-              to={currentRole === "admin" ? "/admin/dashboard" : "/"}
-              replace
-            />
-          }
-        />
-        <Route
-          path="/forgot-password"
-          element={
-            <Navigate
-              to={currentRole === "admin" ? "/admin/dashboard" : "/"}
-              replace
-            />
-          }
-        />
+        <Route path="/login" element={<Navigate to={currentRole === "admin" ? "/admin/dashboard" : "/"} replace />} />
+        <Route path="/forgot-password" element={<Navigate to={currentRole === "admin" ? "/admin/dashboard" : "/"} replace />} />
+
         <Route
           path="/"
           element={
-            currentRole === "encoder" ? (
-              <Home
-                entries={encoderEntries}
-                submissionWindow={submissionWindow}
-              />
-            ) : (
-              <Navigate to="/admin/dashboard" replace />
-            )
+            currentRole === "encoder"
+              ? <Home entries={encoderEntries} submissionWindow={submissionWindow} />
+              : <Navigate to="/admin/dashboard" replace />
           }
         />
 
         <Route
           path="/entries"
           element={
-            currentRole === "encoder" ? (
-              <MyEntries
-                entries={encoderEntries}
-                onEditEntry={handleStartEdit}
-                onDeleteEntry={handleDeleteEntry}
-                onShowToast={showToast}
-                submissionWindow={submissionWindow}
-              />
-            ) : (
-              <Navigate to="/admin/dashboard" replace />
-            )
+            currentRole === "encoder"
+              ? <MyEntries entries={encoderEntries} onEditEntry={handleStartEdit} onDeleteEntry={handleDeleteEntry} onShowToast={showToast} submissionWindow={submissionWindow} />
+              : <Navigate to="/admin/dashboard" replace />
           }
         />
 
         <Route
           path="/submit"
           element={
-            currentRole === "encoder" ? (
-              <SubmitEntry
-                onAddEntry={handleAddEntry}
-                entryToEdit={entryBeingEdited}
-                onSaveEditedEntry={handleSaveEditedEntry}
-                clearEditingEntry={clearEditingEntry}
-                submissionWindow={submissionWindow}
-                draftState={submitEntryDraft}
-                onDraftChange={setSubmitEntryDraft}
-                onClearDraft={clearSubmitEntryDraft}
-                currentUser={authUser}
-                templateData={templateData}
-              />
-            ) : (
-              <Navigate to="/admin/dashboard" replace />
-            )
+            currentRole === "encoder"
+              ? <SubmitEntry onAddEntry={handleAddEntry} entryToEdit={entryBeingEdited} onSaveEditedEntry={handleSaveEditedEntry} clearEditingEntry={clearEditingEntry} submissionWindow={submissionWindow} draftState={submitEntryDraft} onDraftChange={setSubmitEntryDraft} onClearDraft={clearSubmitEntryDraft} currentUser={authUser} templateData={templateData} />
+              : <Navigate to="/admin/dashboard" replace />
           }
         />
 
         <Route
           path="/admin/manage-template"
           element={
-            currentRole === "admin" ? (
-              <ManageTemplate
-                templateData={templateData}
-                onUpdateTemplateData={setTemplateData}
-                onResetTemplate={() => setTemplateData(createInitialTemplateState())}
-                onShowToast={showToast}
-              />
-            ) : (
-              <Navigate to="/" replace />
-            )
+            currentRole === "admin"
+              ? <ManageTemplate templateData={templateData} onUpdateTemplateData={setTemplateData} onResetTemplate={() => setTemplateData(createInitialTemplateState())} onShowToast={showToast} />
+              : <Navigate to="/" replace />
           }
         />
 
         <Route
           path="/admin/dashboard"
           element={
-            currentRole === "admin" ? (
-              <AdminDashboard
-                entries={entries}
-                submissionWindow={submissionWindow}
-                onUpdateSubmissionWindow={setSubmissionWindow}
-              />
-            ) : (
-              <Navigate to="/" replace />
-            )
+            currentRole === "admin"
+              ? <AdminDashboard entries={entries} submissionWindow={submissionWindow} onUpdateSubmissionWindow={setSubmissionWindow} />
+              : <Navigate to="/" replace />
           }
         />
 
         <Route
           path="/admin/review"
           element={
-            currentRole === "admin" ? (
-              <AdminReview
-                entries={entries}
-                onUpdateEntry={handleUpdateEntry}
-                onDeleteEntry={handleDeleteEntry}
-                submissionWindow={submissionWindow}
-                onShowToast={showToast}
-              />
-            ) : (
-              <Navigate to="/" replace />
-            )
+            currentRole === "admin"
+              ? <AdminReview entries={entries} onUpdateEntry={handleUpdateEntry} onDeleteEntry={handleDeleteEntry} submissionWindow={submissionWindow} onShowToast={showToast} />
+              : <Navigate to="/" replace />
           }
         />
 
         <Route
           path="/admin/manage-accounts"
           element={
-            currentRole === "admin" ? (
-              <ManageAccounts
-                accounts={accounts}
-                onUpdateAccount={handleUpdateAccount}
-                onShowToast={showToast}
-              />
-            ) : (
-              <Navigate to="/" replace />
-            )
+            currentRole === "admin"
+              ? <ManageAccounts accounts={accounts} onUpdateAccount={handleUpdateAccount} onShowToast={showToast} />
+              : <Navigate to="/" replace />
           }
         />
 
         <Route
           path="/admin/manage-accounts/new"
           element={
-            currentRole === "admin" ? (
-              <AddNewAccount
-                accounts={accounts}
-                onAddAccount={handleAddAccount}
-                onShowToast={showToast}
-              />
-            ) : (
-              <Navigate to="/" replace />
-            )
+            currentRole === "admin"
+              ? <AddNewAccount accounts={accounts} onAddAccount={handleAddAccount} onShowToast={showToast} />
+              : <Navigate to="/" replace />
           }
         />
-
-
       </Routes>
     </AppLayout>
   );

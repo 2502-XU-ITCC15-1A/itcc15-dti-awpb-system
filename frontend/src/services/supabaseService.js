@@ -385,6 +385,114 @@ export const submissionService = {
   }
 };
 
+// ── AWPB Entries Service ───────────────────────────────────────────────────────
+// Converts between camelCase (frontend) and snake_case (Supabase)
+
+function entryToSnake(entry) {
+  return {
+    owner_id: entry.ownerId,
+    owner_username: entry.ownerUsername || '',
+    owner_full_name: entry.ownerFullName || '',
+    planning_year: String(entry.planningYear),
+    unit: entry.unit || '',
+    component: entry.component || '',
+    sub_component: entry.subComponent || '',
+    key_activity: entry.keyActivity || '',
+    no: entry.no || '',
+    performance_indicator: entry.performanceIndicator || '',
+    sub_activity: entry.subActivity || '',
+    title_of_activities: entry.titleOfActivities || '',
+    unit_cost: Number(entry.unitCost) || 0,
+    monthly_breakdown: entry.monthlyBreakdown || [],
+    grand_total: Number(entry.grandTotal) || 0,
+    status: entry.status || 'Pending Review',
+    admin_comment: entry.adminComment || '',
+    submitted_at: entry.submittedAt || new Date().toISOString(),
+    reviewed_at: entry.reviewedAt || null,
+    resubmitted_at: entry.resubmittedAt || null,
+  };
+}
+
+function entryToCamel(row) {
+  return {
+    id: row.id,
+    ownerId: row.owner_id,
+    ownerUsername: row.owner_username,
+    ownerFullName: row.owner_full_name,
+    planningYear: row.planning_year,
+    unit: row.unit,
+    component: row.component,
+    subComponent: row.sub_component,
+    keyActivity: row.key_activity,
+    no: row.no,
+    performanceIndicator: row.performance_indicator,
+    subActivity: row.sub_activity,
+    titleOfActivities: row.title_of_activities,
+    unitCost: Number(row.unit_cost),
+    monthlyBreakdown: row.monthly_breakdown || [],
+    grandTotal: Number(row.grand_total),
+    status: row.status,
+    adminComment: row.admin_comment || '',
+    submittedAt: row.submitted_at,
+    reviewedAt: row.reviewed_at,
+    resubmittedAt: row.resubmitted_at,
+    createdAt: row.created_at,
+  };
+}
+
+export const awbpEntriesService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('awpb_entries')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data || []).map(entryToCamel);
+  },
+
+  async create(entry) {
+    const { data, error } = await supabase
+      .from('awpb_entries')
+      .insert(entryToSnake(entry))
+      .select()
+      .single();
+    if (error) throw error;
+    return entryToCamel(data);
+  },
+
+  async update(id, updates) {
+    const snake = {};
+    const fieldMap = {
+      status: 'status',
+      adminComment: 'admin_comment',
+      reviewedAt: 'reviewed_at',
+      resubmittedAt: 'resubmitted_at',
+    };
+    for (const [camel, snakeKey] of Object.entries(fieldMap)) {
+      if (camel in updates) snake[snakeKey] = updates[camel];
+    }
+    if ('titleOfActivities' in updates) {
+      Object.assign(snake, entryToSnake(updates));
+    }
+    const { data, error } = await supabase
+      .from('awpb_entries')
+      .update(snake)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    return entryToCamel(data);
+  },
+
+  async delete(id) {
+    const { error } = await supabase
+      .from('awpb_entries')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+};
+
 // Real-time subscriptions
 export const realtimeService = {
   // Subscribe to entries changes

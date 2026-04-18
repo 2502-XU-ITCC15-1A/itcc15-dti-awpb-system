@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const { Pool } = require('pg');
+const PDFDocument = require('pdfkit');
 require('dotenv').config();
 
 const app = express();
@@ -814,6 +815,103 @@ app.patch('/api/admin/template/:type/:id/status', authenticateToken, (req, res) 
     is_active,
     updated_at: new Date().toISOString()
   });
+});
+
+// PDF REPORT: Generate AWPB Entry Report as PDF
+app.get('/api/entries/report/pdf', authenticateToken, async (req, res) => {
+  try {
+    // Query entries with related data from database
+    const result = await pool.query(`
+      SELECT e.*, 
+             p.full_name as owner_name,
+             u.name as unit_name,
+             c.name as component_name,
+             sc.name as sub_component_name,
+             ka.name as key_activity_name
+      FROM entries e
+      LEFT JOIN profiles p ON e.owner_id = p.id
+      LEFT JOIN units u ON e.unit_id = u.id
+      LEFT JOIN components c ON e.component_id = c.id
+      LEFT JOIN sub_components sc ON e.sub_component_id = sc.id
+      LEFT JOIN key_activities ka ON e.key_activity_id = ka.id
+      ORDER BY e.created_at DESC
+    `);
+
+    const entries = result.rows;
+
+    // Create PDF document
+    const doc = new PDFDocument({ margin: 50, size: 'A4' });
+
+    // Set response headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=AWPB-Entry-Report.pdf');
+    doc.pipe(res);
+
+    // PDF Header - Title
+    doc.fontSize(20).font('Helvetica-Bold').text('DTI - AWPB Entry Report', { align: 'center' });
+    doc.fontSize(10).font('Helvetica').text(`Generated: ${new Date().toLocaleDateString()}`, { align: 'center' });
+    doc.fontSize(10).text(`Total Entries: ${entries.length}`, { align: 'center' });
+    doc.moveDown(2);
+
+    // Draw table header line
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // Table header row
+    const headerY = doc.y;
+    doc.fontSize(10).font('Helvetica-Bold');
+    doc.text('Activity', 50, headerY, { width: 150 });
+    doc.text('Owner', 200, headerY, { width: 90 });
+    doc.text('Component', 290, headerY, { width: 90 });
+    doc.text('Unit Cost', 380, headerY, { width: 80 });
+    doc.text('Status', 460, headerY, { width: 80 });
+    doc.moveDown(0.5);
+
+    // Draw line after header
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(0.5);
+
+    // Table rows - loop through each entry
+    doc.fontSize(9).font('Helvetica');
+    entries.forEach((entry) => {
+      // Add new page if we're near the bottom
+      if (doc.y > 720) {
+        doc.addPage();
+      }
+
+      const rowY = doc.y;
+      doc.text(entry.title_of_activities || 'N/A', 50, rowY, { width: 150 });
+      doc.text(entry.owner_name || 'N/A', 200, rowY, { width: 90 });
+      doc.text(entry.component_name || 'N/A', 290, rowY, { width: 90 });
+      doc.text(`P${(parseFloat(entry.unit_cost) || 0).toLocaleString()}`, 380, rowY, { width: 80 });
+      doc.text(entry.status || 'draft', 460, rowY, { width: 80 });
+      doc.moveDown(1.2);
+
+      // Light separator line between rows
+      doc.save();
+      doc.strokeColor('#cccccc').moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+      doc.restore();
+      doc.moveDown(0.3);
+    });
+
+    // If no entries, show message
+    if (entries.length === 0) {
+      doc.moveDown(2);
+      doc.fontSize(12).font('Helvetica').text('No entries found.', { align: 'center' });
+    }
+
+    // Footer
+    doc.moveDown(2);
+    doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+    doc.moveDown(0.5);
+    doc.fontSize(8).font('Helvetica').text('DTI AWPB System - Confidential Report', { align: 'center' });
+
+    // Finalize the PDF
+    doc.end();
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    res.status(500).json({ error: 'Failed to generate PDF report' });
+  }
 });
 
 // 404 handler
